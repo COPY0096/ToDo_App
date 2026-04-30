@@ -1,0 +1,50 @@
+Product Backlog inicial
+Épicas
+EPIC 1: Gestión de listas
+Crear lista
+Editar lista
+Eliminar lista
+
+EPIC 2: Gestión de tareas
+Crear tarea
+Editar tarea
+Eliminar tarea
+Cambiar estado
+
+EPIC 3: Jerarquía
+Crear subtareas
+Niveles ilimitados
+Navegación en árbol
+
+EPIC 4: Fechas
+fecha inicio
+fecha límite
+tareas vencidas
+
+EPIC 5: Recurrencia
+diaria
+semanal
+mensual
+intervalos personalizados
+cuotas
+
+EPIC 6: Persistencia
+guardar local
+cargar al inicio
+
+EPIC 7: Búsqueda y filtros
+búsqueda textual
+filtros por estado
+filtros por fecha
+
+Historias de usuario ejemplo
+Como usuario quiero crear listas para organizar tareas
+Como usuario quiero agregar subtareas para dividir trabajo
+Como usuario quiero repetir tareas automáticamente
+Como usuario quiero ver tareas vencidas
+
+Fallos estructurales detectados
+Recurrencia no es funcionalidad simple, es motor de reglas
+Subtareas multinivel requiere estructura de árbol, no lista plana
+Falta definición de “instancia de tarea” vs “plantilla de tarea”
+Sin esto, el sistema se vuelve inconsistente al escalar

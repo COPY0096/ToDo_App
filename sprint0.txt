@@ -1,0 +1,5 @@
+Sprint 0 — Setup técnico
+Crear proyecto WPF (.NET 8)
+Configurar MVVM
+Conectar SQLite
+Crear entidades base
