@@ -1,5 +1,21 @@
-Sprint 0 — Setup técnico
-Crear proyecto WPF (.NET 8)
-Configurar MVVM
-Conectar SQLite
-Crear entidades base
+Sprint 0 — Preparación del Proyecto
+
+Objetivo: Crear la base técnica.
+
+Historias:
+Crear solución WPF.
+Configurar patrón MVVM.
+Configurar EF Core.
+Configurar SQLite.
+Crear estructura de carpetas:
+Models
+Views
+ViewModels
+Services
+Data
+Configurar inyección de dependencias.
+Crear navegación básica.
+Entregables
+Proyecto compilando.
+Base de datos creada automáticamente.
+Arquitectura inicial funcionando.

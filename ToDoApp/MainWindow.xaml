@@ -6,7 +6,27 @@
         xmlns:local="clr-namespace:ToDoApp"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
-    <Grid>
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Orientation="Horizontal" Grid.Row="0" Margin="0,0,0,10">
+            <TextBox Width="400" Text="{Binding NewTitle, UpdateSourceTrigger=PropertyChanged}" />
+            <Button Content="Add" Margin="10,0,0,0" Padding="10,4" Click="AddButton_Click" />
+        </StackPanel>
+
+        <ListBox Grid.Row="1" ItemsSource="{Binding Items}">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal">
+                        <CheckBox IsChecked="{Binding IsDone}" Margin="0,0,8,0" />
+                        <TextBlock Text="{Binding Title}" />
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
 
     </Grid>
 </Window>

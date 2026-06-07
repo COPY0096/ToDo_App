@@ -16,9 +16,17 @@ namespace ToDoApp
     /// </summary>
     public partial class MainWindow : Window
     {
+        private readonly MainViewModel _vm = new MainViewModel();
+
         public MainWindow()
         {
             InitializeComponent();
+            DataContext = _vm;
+        }
+
+        private void AddButton_Click(object sender, RoutedEventArgs e)
+        {
+            _vm.AddItem();
         }
     }
 }
