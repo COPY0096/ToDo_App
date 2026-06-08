@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System;
 using System.Windows.Input;
+using System.Threading.Tasks;
 using ToDoApp.Models;
 using ToDoApp.Services;
 
@@ -15,20 +16,26 @@ namespace ToDoApp.ViewModels
         public MainViewModel(TodoService service)
         {
             _service = service;
-            foreach (var it in _service.GetAll())
-            {
-                Items.Add(it);
-                SubscribeItem(it);
-            }
 
             // initialize commands
             AddTaskCommand = new RelayCommand(AddItem, CanAdd);
             DeleteCommand = new RelayCommand<TodoItem>(DeleteItem);
         }
 
+        public async Task InitializeAsync()
+        {
+            var items = await _service.GetAllAsync();
+            foreach (var it in items)
+            {
+                Items.Add(it);
+                SubscribeItem(it);
+            }
+        }
+
         public ObservableCollection<TodoItem> Items { get; } = new ObservableCollection<TodoItem>();
 
         private string _newTitle = string.Empty;
+        private string _newDescription = string.Empty;
         public string NewTitle
         {
             get => _newTitle;
@@ -43,14 +50,28 @@ namespace ToDoApp.ViewModels
             }
         }
 
-        public void AddItem()
+        public string NewDescription
+        {
+            get => _newDescription;
+            set
+            {
+                if (_newDescription != value)
+                {
+                    _newDescription = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public async void AddItem()
         {
             if (string.IsNullOrWhiteSpace(NewTitle)) return;
-            var item = new TodoItem { Title = NewTitle };
-            _service.Add(item);
+            var item = new TodoItem { Title = NewTitle, Description = NewDescription };
+            await _service.AddAsync(item);
             Items.Add(item);
             SubscribeItem(item);
             NewTitle = string.Empty;
+            NewDescription = string.Empty;
             // notify command can execute changed
             (AddTaskCommand as RelayCommand)?.RaiseCanExecuteChanged();
         }
@@ -60,21 +81,21 @@ namespace ToDoApp.ViewModels
             item.PropertyChanged += Item_PropertyChanged;
         }
 
-        private void Item_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        private async void Item_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
             if (sender is TodoItem item)
             {
                 // Persist changes (e.g., IsDone toggles)
-                _service.Update(item);
+                await _service.UpdateAsync(item);
             }
         }
 
-        public void DeleteItem(TodoItem? item)
+        public async void DeleteItem(TodoItem? item)
         {
             if (item is null) return;
             try
             {
-                _service.Delete(item.Id);
+                await _service.DeleteAsync(item.Id);
             }
             catch
             {

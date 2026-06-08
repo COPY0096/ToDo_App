@@ -16,5 +16,13 @@ namespace ToDoApp.Views
             InitializeComponent();
             DataContext = vm;
         }
+
+        private async void Grid_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is MainViewModel vm)
+            {
+                await vm.InitializeAsync();
+            }
+        }
     }
 }
