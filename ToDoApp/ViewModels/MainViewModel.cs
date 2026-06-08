@@ -1,11 +1,21 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using ToDoApp.Models;
+using ToDoApp.Services;
 
-namespace ToDoApp
+namespace ToDoApp.ViewModels
 {
     public class MainViewModel : INotifyPropertyChanged
     {
+        private readonly TodoService _service;
+
+        public MainViewModel(TodoService service)
+        {
+            _service = service;
+            foreach (var it in _service.GetAll()) Items.Add(it);
+        }
+
         public ObservableCollection<TodoItem> Items { get; } = new ObservableCollection<TodoItem>();
 
         private string _newTitle = string.Empty;
@@ -18,7 +28,9 @@ namespace ToDoApp
         public void AddItem()
         {
             if (string.IsNullOrWhiteSpace(NewTitle)) return;
-            Items.Add(new TodoItem { Title = NewTitle });
+            var item = new TodoItem { Title = NewTitle };
+            _service.Add(item);
+            Items.Add(item);
             NewTitle = string.Empty;
         }
 

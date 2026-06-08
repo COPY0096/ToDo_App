@@ -1,7 +1,7 @@
 using System;
 using System.ComponentModel;
 
-namespace ToDoApp
+namespace ToDoApp.Models
 {
     public class TodoItem : INotifyPropertyChanged
     {
