@@ -1,70 +1,258 @@
 # ToDo Desktop App
 
 ## Descripción
-Aplicación de escritorio para gestión de tareas personales basada en listas jerárquicas con soporte de subtareas, fechas, recordatorios y recurrencia.
+
+ToDo Desktop App es una aplicación de escritorio desarrollada en WPF para la gestión de tareas personales mediante listas jerárquicas. Permite organizar actividades, crear subtareas ilimitadas, gestionar fechas, controlar estados y configurar tareas recurrentes.
+
+El proyecto utiliza el patrón MVVM para mantener una arquitectura desacoplada, escalable y fácil de mantener.
 
 ---
 
-## Funcionalidades principales
+## Objetivo del Proyecto
 
-### 1. Gestión de listas
-- Crear listas de tareas
-- Renombrar listas
-- Eliminar listas
-- Visualizar todas las listas
+Desarrollar una solución de productividad personal que permita administrar tareas complejas mediante estructuras jerárquicas, recordatorios y reglas de recurrencia, almacenando toda la información localmente.
 
 ---
 
-### 2. Gestión de tareas
-- Crear tareas dentro de una lista
-- Editar tareas
-- Eliminar tareas
-- Marcar tareas como completadas
-- Asignar fecha y hora de inicio
-- Asignar fecha límite de finalización
-- Agregar detalles/descripción
+## Tecnologías Utilizadas
+
+### Frontend
+
+* WPF (.NET)
+* XAML
+
+### Arquitectura
+
+* MVVM (Model-View-ViewModel)
+
+### Backend Local
+
+* Entity Framework Core
+* SQLite
+
+### Inyección de Dependencias
+
+* Microsoft.Extensions.Hosting
+* Microsoft.Extensions.DependencyInjection
 
 ---
 
-### 3. Subtareas jerárquicas
-- Crear subtareas dentro de tareas
-- Soporte de múltiples niveles de profundidad
-- Cada subtarea tiene su propio estado y fechas
+## Funcionalidades Principales
+
+### Gestión de Listas
+
+* Crear listas
+* Editar listas
+* Eliminar listas
+* Visualizar listas disponibles
+
+### Gestión de Tareas
+
+* Crear tareas
+* Editar tareas
+* Eliminar tareas
+* Marcar tareas como completadas
+* Reabrir tareas completadas
+* Agregar descripción
+* Asignar fecha de inicio
+* Asignar fecha límite
+
+### Subtareas Jerárquicas
+
+* Crear subtareas dentro de una tarea
+* Profundidad ilimitada
+* Estado independiente por subtarea
+* Fechas independientes por subtarea
+
+### Recurrencia
+
+* Diaria
+* Semanal
+* Mensual
+* Anual
+* Cada X días
+* Cada X semanas
+* Cada X meses
+* Cada X años
+* Cuotas de ejecución
+
+### Organización
+
+* Estado pendiente
+* Estado en progreso
+* Estado completada
+* Filtros por lista
+* Filtros por estado
+* Filtros por fecha
+* Búsqueda por texto
+* Visualización de tareas vencidas
+
+### Persistencia
+
+* Base de datos SQLite local
+* Guardado automático
+* Carga automática al iniciar
 
 ---
 
-### 4. Repetición de tareas (recurrencia)
-- Tareas diarias
-- Semanales
-- Mensuales
-- Intervalo personalizado (cada X días/meses/años)
-- Cuotas (ej: 3 veces por semana)
+## Reglas de Negocio
+
+### Listas
+
+* Una lista puede contener múltiples tareas.
+* Eliminar una lista elimina todas sus tareas asociadas.
+
+### Tareas
+
+* Una tarea puede contener múltiples subtareas.
+* Las tareas completadas pueden reabrirse.
+* Las fechas deben mantener coherencia entre inicio y vencimiento.
+
+### Recurrencia
+
+* Las tareas recurrentes generan nuevas instancias automáticamente según su configuración.
+* El historial de ejecuciones debe conservarse.
 
 ---
 
-### 5. Organización y control
-- Estado: pendiente / en progreso / completada
-- Filtrado por estado, fecha o lista
-- Búsqueda por texto
-- Visualización de tareas vencidas
+## Arquitectura del Proyecto
+
+```text
+ToDoApp
+│
+├── Models
+│   ├── TaskItem
+│   ├── TaskList
+│   └── RecurrenceRule
+│
+├── ViewModels
+│   ├── MainViewModel
+│   ├── TaskViewModel
+│   └── ListViewModel
+│
+├── Views
+│   ├── MainWindow
+│   ├── TaskView
+│   └── ListView
+│
+├── Services
+│   ├── TaskService
+│   ├── RecurrenceService
+│   └── NotificationService
+│
+├── Data
+│   ├── AppDbContext
+│   └── Migrations
+│
+└── App.xaml
+```
 
 ---
 
-### 6. Persistencia
-- Guardado local de datos
-- Carga automática al iniciar la aplicación
+## Estado Actual del MVP
+
+### Completado
+
+* Estructura inicial del proyecto
+* Patrón MVVM
+* Configuración de WPF
+* Integración con SQLite
+* Configuración de Entity Framework Core
+* Configuración de Dependency Injection
+* Creación de modelos base
+
+### En Desarrollo
+
+* CRUD de listas
+* CRUD de tareas
+* Gestión de subtareas
+* Persistencia completa
+* Filtros y búsquedas
+
+### Pendiente
+
+* Motor de recurrencia
+* Recordatorios
+* Notificaciones
+* Configuración avanzada
 
 ---
 
-## Reglas del sistema
-- Eliminar una lista elimina sus tareas y subtareas
-- Las tareas completadas pueden reabrirse
-- Las tareas recurrentes generan nuevas instancias según configuración
+## Requisitos
+
+* Windows 10 o superior
+* .NET SDK 9 o superior
+* Visual Studio 2026 o superior
 
 ---
 
-## Objetivo del MVP
-Validar la gestión jerárquica de tareas con recurrencia y control de fechas en entorno de escritorio local.
+## Instalación
 
--FUTURO
-Integracion con google task
+```bash
+git clone <repositorio>
+
+cd ToDoApp
+
+dotnet restore
+
+dotnet build
+
+dotnet run
+```
+
+---
+
+## Roadmap
+
+### Sprint 0 — Preparación
+
+* Configuración inicial
+* Arquitectura MVVM
+* SQLite
+* Entity Framework Core
+
+### Sprint 1 — Gestión de Listas
+
+* CRUD de listas
+
+### Sprint 2 — Gestión de Tareas
+
+* CRUD de tareas
+
+### Sprint 3 — Subtareas
+
+* Árbol jerárquico
+
+### Sprint 4 — Recurrencia
+
+* Motor de repetición
+
+### Sprint 5 — Filtros y Búsquedas
+
+* Consultas rápidas
+
+### Sprint 6 — Recordatorios
+
+* Notificaciones locales
+
+### Sprint 7 — Optimización y Pruebas
+
+* Validación funcional
+* Corrección de errores
+
+---
+
+## Futuras Integraciones
+
+* Integración con Google Tasks
+* Sincronización en la nube
+* Exportación e importación de datos
+* Aplicación móvil complementaria
+* Autenticación de usuarios
+* Sincronización multiplataforma
+
+---
+
+## Licencia
+
+Proyecto académico y de aprendizaje.
