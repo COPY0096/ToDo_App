@@ -5,6 +5,8 @@ namespace ToDoApp.Models
 {
     public class TodoItem : INotifyPropertyChanged
     {
+        public int Id { get; set; }        
+
         private string _title = string.Empty;
         private bool _isDone;
 

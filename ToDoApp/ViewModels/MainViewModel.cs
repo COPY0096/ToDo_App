@@ -15,7 +15,15 @@ namespace ToDoApp.ViewModels
         public MainViewModel(TodoService service)
         {
             _service = service;
-            foreach (var it in _service.GetAll()) Items.Add(it);
+            foreach (var it in _service.GetAll())
+            {
+                Items.Add(it);
+                SubscribeItem(it);
+            }
+
+            // initialize commands
+            AddTaskCommand = new RelayCommand(AddItem, CanAdd);
+            DeleteCommand = new RelayCommand<TodoItem>(DeleteItem);
         }
 
         public ObservableCollection<TodoItem> Items { get; } = new ObservableCollection<TodoItem>();
@@ -41,14 +49,45 @@ namespace ToDoApp.ViewModels
             var item = new TodoItem { Title = NewTitle };
             _service.Add(item);
             Items.Add(item);
+            SubscribeItem(item);
             NewTitle = string.Empty;
             // notify command can execute changed
             (AddTaskCommand as RelayCommand)?.RaiseCanExecuteChanged();
         }
 
+        private void SubscribeItem(TodoItem item)
+        {
+            item.PropertyChanged += Item_PropertyChanged;
+        }
+
+        private void Item_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (sender is TodoItem item)
+            {
+                // Persist changes (e.g., IsDone toggles)
+                _service.Update(item);
+            }
+        }
+
+        public void DeleteItem(TodoItem? item)
+        {
+            if (item is null) return;
+            try
+            {
+                _service.Delete(item.Id);
+            }
+            catch
+            {
+                // ignore for now
+            }
+            item.PropertyChanged -= Item_PropertyChanged;
+            Items.Remove(item);
+        }
+
         private bool CanAdd() => !string.IsNullOrWhiteSpace(NewTitle);
 
         public ICommand AddTaskCommand { get; }
+        public ICommand DeleteCommand { get; }
 
         public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName] string? name = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
