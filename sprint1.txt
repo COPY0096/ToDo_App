@@ -1,0 +1,21 @@
+Sprint 1 — Gestión de Tareas
+
+Objetivo: CRUD básico de tareas.
+
+Historias
+Crear tarea.
+Editar tarea.
+Eliminar tarea.
+Marcar tarea completada.
+Listar tareas.
+Campos MVP
+Id
+Título
+Descripción
+FechaCreacion
+FechaVencimiento
+Estado
+Entregables
+Pantalla de tareas.
+CRUD completo.
+Persistencia en SQLite.

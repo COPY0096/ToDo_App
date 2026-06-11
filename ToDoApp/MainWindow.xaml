@@ -6,15 +6,16 @@
         xmlns:local="clr-namespace:ToDoApp.Views"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
-    <Grid Margin="10">
+    <Grid Margin="10" Loaded="Grid_Loaded">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
         <StackPanel Orientation="Horizontal" Grid.Row="0" Margin="0,0,0,10">
-            <TextBox Width="400" Text="{Binding NewTitle, UpdateSourceTrigger=PropertyChanged}" />
-            <Button Content="Add" Margin="10,0,0,0" Padding="10,4" Click="AddButton_Click" />
+            <TextBox Width="300" Text="{Binding NewTitle, UpdateSourceTrigger=PropertyChanged}" />
+            <TextBox Width="300" Margin="8,0,0,0" Text="{Binding NewDescription, UpdateSourceTrigger=PropertyChanged}" />
+            <Button Content="Add" Margin="10,0,0,0" Padding="10,4" Command="{Binding AddTaskCommand}" />
         </StackPanel>
 
         <ListBox Grid.Row="1" ItemsSource="{Binding Items}">
@@ -22,7 +23,11 @@
                 <DataTemplate>
                     <StackPanel Orientation="Horizontal">
                         <CheckBox IsChecked="{Binding IsDone}" Margin="0,0,8,0" />
-                        <TextBlock Text="{Binding Title}" />
+                        <StackPanel>
+                            <TextBlock Text="{Binding Title}" FontWeight="Bold" />
+                            <TextBlock Text="{Binding Description}" FontStyle="Italic" FontSize="12" />
+                        </StackPanel>
+                        <Button Content="Delete" Margin="8,0,0,0" Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=ListBox}}" CommandParameter="{Binding}" />
                     </StackPanel>
                 </DataTemplate>
             </ListBox.ItemTemplate>
