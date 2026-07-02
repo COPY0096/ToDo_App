@@ -1,8 +1,9 @@
 {
   "ExpandedNodes": [
     "",
-    "\\ToDoApp"
+    "\\ToDoApp",
+    "\\ToDoApp\\Views"
   ],
-  "SelectedNode": "\\ToDoApp\\ToDoApp.slnx",
+  "SelectedNode": "\\ToDoApp\\Views\\MainWindow.xaml.cs",
   "PreviewInSolutionExplorer": false
 }

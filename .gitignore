@@ -6,7 +6,7 @@
 #
 # or wget:
 # wget --no-check-certificate http://gist.githubusercontent.com/kmorcinek/2710267/raw/.gitignore
-
+.vs
 # User-specific files
 *.suo
 *.user
@@ -224,6 +224,3 @@ AppPackages/
 #####
 # End of core ignore list, below put you custom 'per project' settings (patterns or path)
 #####
-
-# Ignore local sqlite DB
-todo.db
