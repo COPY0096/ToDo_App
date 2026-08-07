@@ -31,11 +31,13 @@ namespace ToDoApp
                 })
                 .Build();
 
-            // Ensure DB created
+            // Apply any pending EF Core migrations (creates the DB on first run,
+            // and brings the schema up to date on later runs instead of leaving
+            // stale databases missing new columns).
             using (var scope = _host.Services.CreateScope())
             {
                 var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                db.Database.EnsureCreated();
+                db.Database.Migrate();
             }
 
             var main = _host.Services.GetRequiredService<MainWindow>();
