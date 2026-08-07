@@ -1,6 +1,6 @@
 # ToDo App — Estado Actual del Proyecto
 
-**Última actualización:** 8 de junio de 2026
+**Última actualización:** 7 de agosto de 2026
 
 ---
 
@@ -8,11 +8,11 @@
 
 El proyecto corresponde a una aplicación de escritorio desarrollada con **WPF**, siguiendo el patrón **MVVM**, utilizando **Entity Framework Core**, **SQLite** y **Microsoft.Extensions.Hosting** para la inyección de dependencias.
 
-**Estado de compilación:** ✅ Compila correctamente sin errores
+**Estado de compilación:** ✅ Compila correctamente sin errores ni warnings
 
 **Rama activa:** `main`
 
-**Último commit:** "1.1 sync master branch"
+**Último commit:** "Merge pull request #1 from COPY0096/fix/ef-core-migrations"
 
 ---
 
@@ -74,7 +74,7 @@ ToDoApp/
 - ✅ SQLite configurado
 - ✅ Generic Host con Dependency Injection
 - ✅ DbContext registrado en contenedor DI
-- ✅ Base de datos creada automáticamente (`EnsureCreated()`)
+- ✅ Base de datos gestionada con migraciones EF Core (`Database.Migrate()`)
 - ✅ Proyecto compilando sin errores
 
 ---
@@ -216,6 +216,27 @@ Elementos:
 
 ---
 
+## ✅ Testing
+
+**Estado:** Suite inicial de unit tests agregada (proyecto `ToDoApp.Tests`, xUnit).
+
+| Área | Cobertura | Detalles |
+|---|---|---|
+| **Modelo** (`TodoItem`) | ✅ | Sincronización `IsDone`↔`Estado`, notificación `INotifyPropertyChanged` |
+| **Servicio** (`TodoService`) | ✅ | CRUD completo contra EF Core InMemory (no toca SQLite real) |
+| **Comandos** (`RelayCommand`/`RelayCommand<T>`) | ✅ | `CanExecute`, `Execute`, `RaiseCanExecuteChanged` |
+| **ViewModel** (`MainViewModel`) | ✅ | Carga inicial, validación de alta, add/toggle/delete end-to-end |
+| Integration tests (UI/E2E) | ⬜ | No implementado |
+
+```powershell
+# Correr toda la suite
+dotnet test ToDoApp/ToDoApp.slnx
+```
+
+27 tests, todos en verde al momento de este commit.
+
+---
+
 ## ✨ Funcionalidades Disponibles
 
 | Funcionalidad | Estado | Nota |
@@ -251,8 +272,8 @@ Elementos:
 
 ### Prioridad Baja
 
-- [ ] **Migraciones EF Core** - Implementar migrations
-- [ ] **Unit Tests** - Pruebas unitarias
+- [x] **Migraciones EF Core** - Implementado (`InitialCreate` + `Database.Migrate()`)
+- [x] **Unit Tests** - Suite inicial en `ToDoApp.Tests` (modelo, servicio, comandos, ViewModel)
 - [ ] **Integration Tests** - Pruebas de integración
 - [ ] **Subtareas** - Jerarquía de tareas
 - [ ] **Recurrencia** - Tareas repetidas
@@ -265,11 +286,16 @@ Elementos:
 
 | Riesgo | Impacto | Mitigación |
 |---|---|---|
-| Sin unit tests | Medio | Implementar suite de tests |
 | Edición en línea limitada | Bajo | Agregar UI de edición completa |
 | Base de datos sin backups | Alto | Autobackup o exportación |
 | Escalabilidad | Bajo | Considerar para sprints futuros |
 | UI básica | Bajo | Mejorar styling y UX |
+| Sin integration/E2E tests | Bajo | Cubierto por unit tests por ahora; agregar en sprints futuros |
+
+**Resueltos en este ciclo:**
+- ~~Schema desactualizado rompía la app (`EnsureCreated()` no aplicaba cambios de modelo)~~ → migraciones EF Core.
+- ~~Sin unit tests~~ → 27 tests cubriendo modelo, servicio, comandos y ViewModel.
+- ~~Vulnerabilidad alta en `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 (CVE-2025-6965)~~ → pineada a 2.1.12.
 
 ---
 
@@ -363,9 +389,20 @@ msbuild ToDoApp/ToDoApp.csproj /t:Clean
 ```
 Motor:    SQLite
 Archivo:  Local (auto-creado en app directory)
-Creación: EnsureCreated() automático
+Creación: Migraciones EF Core (Database.Migrate() al iniciar)
 Encoding: UTF-8
 ```
+
+### Migraciones EF Core
+
+Cualquier cambio a `TodoItem` (o al `DbContext`) requiere generar una nueva migración antes de que la app la levante:
+
+```powershell
+cd ToDoApp
+dotnet ef migrations add <NombreDescriptivo> -o Data/Migrations
+```
+
+`App.xaml.cs` aplica las migraciones pendientes automáticamente al arrancar (`Database.Migrate()`), tanto en una DB nueva como en una existente.
 
 ---
 
@@ -399,5 +436,5 @@ test: Agregación de tests
 
 ---
 
-**Estado:** El proyecto está en fase de desarrollo activo. Sprint 1 está casi completo con funcionalidad CRUD básica funcional. Próximo paso: Sprint 2 con categorías/listas.
+**Estado:** El proyecto está en fase de desarrollo activo. Sprint 1 está casi completo con funcionalidad CRUD básica funcional, ahora respaldada por migraciones EF Core y una suite inicial de unit tests. Próximo paso: Sprint 2 con categorías/listas.
 
