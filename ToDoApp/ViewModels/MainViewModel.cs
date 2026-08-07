@@ -36,6 +36,7 @@ namespace ToDoApp.ViewModels
 
         private string _newTitle = string.Empty;
         private string _newDescription = string.Empty;
+        private DateTime? _newFechaVencimiento;
         public string NewTitle
         {
             get => _newTitle;
@@ -63,15 +64,37 @@ namespace ToDoApp.ViewModels
             }
         }
 
+        public DateTime? NewFechaVencimiento
+        {
+            get => _newFechaVencimiento;
+            set
+            {
+                if (_newFechaVencimiento != value)
+                {
+                    _newFechaVencimiento = value;
+                    OnPropertyChanged();
+                    (AddTaskCommand as RelayCommand)?.RaiseCanExecuteChanged();
+                }
+            }
+        }
+
         public async void AddItem()
         {
             if (string.IsNullOrWhiteSpace(NewTitle)) return;
-            var item = new TodoItem { Title = NewTitle, Description = NewDescription };
+            // Validate FechaVencimiento is not before creation
+            if (NewFechaVencimiento.HasValue && NewFechaVencimiento.Value.Date < DateTime.Today)
+            {
+                // ignore add if invalid for now
+                return;
+            }
+
+            var item = new TodoItem { Title = NewTitle, Description = NewDescription, FechaVencimiento = NewFechaVencimiento };
             await _service.AddAsync(item);
             Items.Add(item);
             SubscribeItem(item);
             NewTitle = string.Empty;
             NewDescription = string.Empty;
+            NewFechaVencimiento = null;
             // notify command can execute changed
             (AddTaskCommand as RelayCommand)?.RaiseCanExecuteChanged();
         }
@@ -105,7 +128,12 @@ namespace ToDoApp.ViewModels
             Items.Remove(item);
         }
 
-        private bool CanAdd() => !string.IsNullOrWhiteSpace(NewTitle);
+        private bool CanAdd()
+        {
+            if (string.IsNullOrWhiteSpace(NewTitle)) return false;
+            if (NewFechaVencimiento.HasValue && NewFechaVencimiento.Value.Date < DateTime.Today) return false;
+            return true;
+        }
 
         public ICommand AddTaskCommand { get; }
         public ICommand DeleteCommand { get; }
