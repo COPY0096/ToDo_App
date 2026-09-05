@@ -78,15 +78,41 @@ namespace ToDoApp.ViewModels
             }
         }
 
+        private string _validationMessage = string.Empty;
+
+        /// <summary>
+        /// Mensaje descriptivo mostrado en la UI cuando la alta de una tarea falla una validación.
+        /// Vacío cuando no hay ningún error pendiente de mostrar.
+        /// </summary>
+        public string ValidationMessage
+        {
+            get => _validationMessage;
+            private set
+            {
+                if (_validationMessage != value)
+                {
+                    _validationMessage = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         public async void AddItem()
         {
-            if (string.IsNullOrWhiteSpace(NewTitle)) return;
-            // Validate FechaVencimiento is not before creation
-            if (NewFechaVencimiento.HasValue && NewFechaVencimiento.Value.Date < DateTime.Today)
+            if (string.IsNullOrWhiteSpace(NewTitle))
             {
-                // ignore add if invalid for now
+                ValidationMessage = "El título es obligatorio.";
                 return;
             }
+
+            // Validate FechaVencimiento is not before today
+            if (NewFechaVencimiento.HasValue && NewFechaVencimiento.Value.Date < DateTime.Today)
+            {
+                ValidationMessage = "La fecha límite no puede ser anterior a hoy.";
+                return;
+            }
+
+            ValidationMessage = string.Empty;
 
             var item = new TodoItem { Title = NewTitle, Description = NewDescription, FechaVencimiento = NewFechaVencimiento };
             await _service.AddAsync(item);
@@ -130,9 +156,10 @@ namespace ToDoApp.ViewModels
 
         private bool CanAdd()
         {
-            if (string.IsNullOrWhiteSpace(NewTitle)) return false;
-            if (NewFechaVencimiento.HasValue && NewFechaVencimiento.Value.Date < DateTime.Today) return false;
-            return true;
+            // Solo el título es requisito para habilitar el botón: una fecha inválida
+            // debe poder intentarse para que AddItem muestre un mensaje descriptivo,
+            // en vez de dejar el botón deshabilitado sin explicación.
+            return !string.IsNullOrWhiteSpace(NewTitle);
         }
 
         public ICommand AddTaskCommand { get; }
