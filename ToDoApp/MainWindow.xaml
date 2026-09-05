@@ -7,7 +7,7 @@
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         xmlns:models="clr-namespace:ToDoApp.Models"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="ToDoApp" Height="450" Width="800">
     <Window.Resources>
         <!-- Fuente de valores del enum Estado (Pendiente/Completado/Cancelado) para el ComboBox -->
         <ObjectDataProvider x:Key="EstadoValues" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
@@ -25,7 +25,7 @@
         <StackPanel Grid.Row="0" Margin="0,0,0,10">
             <StackPanel Orientation="Horizontal">
                 <StackPanel Margin="0,0,8,0">
-                    <TextBlock Text="Título *" FontSize="11" Foreground="Gray" />
+                    <TextBlock Text="Título" FontSize="11" Foreground="Gray" />
                     <TextBox Width="200" Text="{Binding NewTitle, UpdateSourceTrigger=PropertyChanged}"
                              ToolTip="Nombre corto de la tarea (obligatorio)" />
                 </StackPanel>
