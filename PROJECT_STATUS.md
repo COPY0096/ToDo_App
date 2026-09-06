@@ -223,7 +223,7 @@ Elementos:
 
 ### Sprint 2 — Organización (Listas / Board)
 
-**Estado:** 🟡 **EN PROGRESO** — modelo, migración, servicios, ViewModel y UI implementados; falta verificación manual en la app real (ver [SPRINT2.md](../SPRINT2.md)).
+**Estado:** ✅ **COMPLETADO (100%)** — modelo, migración, servicios, ViewModel, UI y verificación manual en la app real, todo hecho (ver [SPRINT2.md](../SPRINT2.md)).
 
 | Ítem | Estado | Detalles |
 |---|---|---|
@@ -234,7 +234,7 @@ Elementos:
 | `TodoListService` | ✅ | CRUD de listas; `DeleteAsync` pregunta mover-vs-eliminar tareas, no es un comportamiento fijo |
 | Board en `MainWindow.xaml` | ✅ | Columnas por lista, alta rápida "+ Add a task", sección "Completed (N)" colapsable, "+ Add new list" |
 | Tests | ✅ | 37/37 en verde (`TodoListServiceTests` nuevo + `MainViewModelTests` reescrito para columnas) |
-| Verificación manual en la app | ⬜ | Pendiente — correr `dotnet run` y revisar visualmente (ver checklist en SPRINT2.md) |
+| Verificación manual en la app | ✅ | Confirmado por el usuario: "Mis Tareas" sin botón de eliminar, listas nuevas ("Ayuntamiento") sí lo tienen, alta de lista y de tarea funcionan |
 
 **Fuera de alcance de este sprint** (ver [SPRINT2.md](../SPRINT2.md) para el detalle): subtareas (Sprint 3), integración con Google Tasks, menú completo de lista (Sort/Share/Print/Export/papelera), etiquetas/adjuntos por tarea, drag & drop de columnas.
 
@@ -332,9 +332,9 @@ dotnet test ToDoApp/ToDoApp.slnx
 |---|---|---|---|
 | **Sprint 0** | 100% | ✅ Completado | Arquitectura base lista |
 | **Sprint 1** | 100% | ✅ Completado | CRUD, edición en línea, estados visuales, validaciones |
-| **Sprint 2** | ~85% | 🟡 En progreso | Listas/board implementado; falta verificación manual en la app |
+| **Sprint 2** | 100% | ✅ Completado | Listas/board implementado y verificado manualmente |
 | **Sprint 3** | 0% | ⬜ No iniciado | Subtareas jerárquicas |
-| **Total Proyecto** | ~55% | 🟡 En progreso | Fase 2 de 4 casi completa |
+| **Total Proyecto** | ~60% | 🟡 En progreso | Fase 2 de 4 completada |
 
 ---
 
