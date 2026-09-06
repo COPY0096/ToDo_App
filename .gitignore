@@ -224,3 +224,9 @@ AppPackages/
 #####
 # End of core ignore list, below put you custom 'per project' settings (patterns or path)
 #####
+
+# ToDoApp: SQLite runtime database (created by App.xaml.cs at "Data Source=todo.db"),
+# not source — each dev/install gets its own via EF Core migrations.
+todo.db
+todo.db-shm
+todo.db-wal

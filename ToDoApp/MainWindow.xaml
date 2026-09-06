@@ -6,8 +6,9 @@
         xmlns:local="clr-namespace:ToDoApp.Views"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         xmlns:models="clr-namespace:ToDoApp.Models"
+        xmlns:vm="clr-namespace:ToDoApp.ViewModels"
         mc:Ignorable="d"
-        Title="ToDoApp" Height="450" Width="800">
+        Title="ToDoApp" Height="520" Width="1000">
     <Window.Resources>
         <!-- Fuente de valores del enum Estado (Pendiente/Completado/Cancelado) para el ComboBox -->
         <ObjectDataProvider x:Key="EstadoValues" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
@@ -15,92 +16,129 @@
                 <x:Type TypeName="models:TodoEstado" />
             </ObjectDataProvider.MethodParameters>
         </ObjectDataProvider>
+
+        <!-- Tarjeta de tarea: plantilla implícita para TodoItem, reutilizada tanto en
+             la lista activa como en "Completed" de cada columna. -->
+        <DataTemplate DataType="{x:Type models:TodoItem}">
+            <Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="4"
+                    Padding="8" Margin="0,0,0,6">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Border CornerRadius="4" Padding="4,2" Margin="0,0,8,0" VerticalAlignment="Center">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Background" Value="#FFF3CD" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Estado}" Value="Completado">
+                                            <Setter Property="Background" Value="#D4EDDA" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Estado}" Value="Cancelado">
+                                            <Setter Property="Background" Value="#F8D7DA" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <ComboBox Width="100" BorderThickness="0" Background="Transparent"
+                                      ItemsSource="{Binding Source={StaticResource EstadoValues}}"
+                                      SelectedItem="{Binding Estado, Mode=TwoWay}"
+                                      ToolTip="Estado de la tarea" />
+                        </Border>
+                        <Button Content="Eliminar" FontSize="10" Padding="4,1" VerticalAlignment="Center"
+                                Command="{Binding DataContext.DeleteTaskCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                CommandParameter="{Binding}" />
+                    </StackPanel>
+                    <TextBox Text="{Binding Title, UpdateSourceTrigger=LostFocus}" FontWeight="Bold"
+                             BorderThickness="0" Background="Transparent" Padding="0" Margin="0,4,0,0"
+                             ToolTip="Hacé clic para editar el título" />
+                    <TextBox Text="{Binding Description, UpdateSourceTrigger=LostFocus}" FontStyle="Italic" FontSize="12"
+                             BorderThickness="0" Background="Transparent" Padding="0"
+                             ToolTip="Hacé clic para editar la descripción" />
+                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                        <TextBlock Text="Creado: " FontWeight="SemiBold" FontSize="10" />
+                        <TextBlock Text="{Binding FechaCreacion, StringFormat={}{0:yyyy-MM-dd HH:mm}}" FontSize="10" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                        <TextBlock Text="Fecha límite: " FontWeight="SemiBold" FontSize="10" VerticalAlignment="Center" />
+                        <DatePicker SelectedDate="{Binding FechaVencimiento, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                    ToolTip="Cambiar la fecha límite de esta tarea" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+
+        <!-- Columna del board: plantilla implícita para TodoListColumnViewModel. -->
+        <DataTemplate DataType="{x:Type vm:TodoListColumnViewModel}">
+            <Border Width="260" Margin="0,0,12,0" Padding="10" VerticalAlignment="Top"
+                    Background="#F5F5F5" BorderBrush="#DDD" BorderThickness="1" CornerRadius="6">
+                <StackPanel>
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox Grid.Column="0" Text="{Binding Nombre, UpdateSourceTrigger=LostFocus}"
+                                 FontWeight="Bold" FontSize="14" BorderThickness="0" Background="Transparent" Padding="0"
+                                 ToolTip="Hacé clic para renombrar la lista" />
+                        <Button Grid.Column="1" Content="Eliminar" FontSize="10" Padding="4,2"
+                                Click="DeleteList_Click" ToolTip="Eliminar esta lista">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding EsPredeterminada}" Value="True">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                    </Grid>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                        <TextBox Width="150" Text="{Binding NewTaskTitle, UpdateSourceTrigger=PropertyChanged}"
+                                 ToolTip="Título de la nueva tarea" />
+                        <Button Content="+ Add a task" Margin="6,0,0,0" Padding="8,2" Command="{Binding AddTaskCommand}"
+                                ToolTip="Agregar tarea a esta lista" />
+                    </StackPanel>
+
+                    <ItemsControl ItemsSource="{Binding Items}" />
+
+                    <Expander Header="{Binding CompletedHeaderText}"
+                              IsExpanded="{Binding IsCompletedExpanded, Mode=TwoWay}" Margin="0,8,0,0">
+                        <ItemsControl ItemsSource="{Binding CompletedItems}" Margin="0,6,0,0" />
+                    </Expander>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
     </Window.Resources>
+
     <Grid Margin="10" Loaded="Grid_Loaded">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Margin="0,0,0,10">
+        <TextBlock Grid.Row="0" Text="Main Board" FontSize="18" FontWeight="Bold" Margin="0,0,0,10" />
+
+        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
             <StackPanel Orientation="Horizontal">
-                <StackPanel Margin="0,0,8,0">
-                    <TextBlock Text="Título" FontSize="11" Foreground="Gray" />
-                    <TextBox Width="200" Text="{Binding NewTitle, UpdateSourceTrigger=PropertyChanged}"
-                             ToolTip="Nombre corto de la tarea (obligatorio)" />
-                </StackPanel>
-                <StackPanel Margin="0,0,8,0">
-                    <TextBlock Text="Descripción" FontSize="11" Foreground="Gray" />
-                    <TextBox Width="220" Text="{Binding NewDescription, UpdateSourceTrigger=PropertyChanged}"
-                             ToolTip="Detalles opcionales de la tarea" />
-                </StackPanel>
-                <StackPanel Margin="0,0,8,0">
-                    <TextBlock Text="Fecha límite" FontSize="11" Foreground="Gray" />
-                    <DatePicker Width="160" SelectedDate="{Binding NewFechaVencimiento, UpdateSourceTrigger=PropertyChanged}"
-                                ToolTip="Fecha límite para completar la tarea (opcional)" />
-                </StackPanel>
-                <Button Content="Agregar" Margin="10,0,0,0" Padding="10,4" VerticalAlignment="Bottom"
-                        Command="{Binding AddTaskCommand}" />
+                <ItemsControl ItemsSource="{Binding Lists}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                </ItemsControl>
+
+                <Border Width="200" Padding="10" VerticalAlignment="Top"
+                        Background="#F5F5F5" BorderBrush="#DDD" BorderThickness="1" CornerRadius="6">
+                    <StackPanel>
+                        <TextBlock Text="+ Add new list" FontWeight="Bold" Margin="0,0,0,8" />
+                        <TextBox Text="{Binding NewListName, UpdateSourceTrigger=PropertyChanged}"
+                                 ToolTip="Nombre de la nueva lista" />
+                        <Button Content="Agregar lista" Margin="0,6,0,0" Command="{Binding AddListCommand}" />
+                    </StackPanel>
+                </Border>
             </StackPanel>
-
-            <TextBlock Text="{Binding ValidationMessage}" Foreground="#C0392B" FontSize="12" Margin="0,6,0,0">
-                <TextBlock.Style>
-                    <Style TargetType="TextBlock">
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding ValidationMessage}" Value="">
-                                <Setter Property="Visibility" Value="Collapsed" />
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </TextBlock.Style>
-            </TextBlock>
-        </StackPanel>
-
-        <ListBox Grid.Row="1" ItemsSource="{Binding Items}">
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                        <StackPanel Orientation="Horizontal" Margin="0,4,0,4">
-                            <Border CornerRadius="4" Padding="4,2" Margin="0,0,8,0" VerticalAlignment="Center">
-                                <Border.Style>
-                                    <Style TargetType="Border">
-                                        <Setter Property="Background" Value="#FFF3CD" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding Estado}" Value="Completado">
-                                                <Setter Property="Background" Value="#D4EDDA" />
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding Estado}" Value="Cancelado">
-                                                <Setter Property="Background" Value="#F8D7DA" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Border.Style>
-                                <ComboBox Width="110" BorderThickness="0" Background="Transparent"
-                                          ItemsSource="{Binding Source={StaticResource EstadoValues}}"
-                                          SelectedItem="{Binding Estado, Mode=TwoWay}"
-                                          ToolTip="Estado de la tarea" />
-                            </Border>
-                            <StackPanel>
-                                <TextBox Text="{Binding Title, UpdateSourceTrigger=LostFocus}" FontWeight="Bold"
-                                         BorderThickness="0" Background="Transparent" Padding="0"
-                                         ToolTip="Hacé clic para editar el título" />
-                                <TextBox Text="{Binding Description, UpdateSourceTrigger=LostFocus}" FontStyle="Italic" FontSize="12"
-                                         BorderThickness="0" Background="Transparent" Padding="0"
-                                         ToolTip="Hacé clic para editar la descripción" />
-                                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                                    <TextBlock Text="Creado: " FontWeight="SemiBold" FontSize="11" />
-                                    <TextBlock Text="{Binding FechaCreacion, StringFormat={}{0:yyyy-MM-dd HH:mm}}" FontSize="11" />
-                                    <TextBlock Text="  Fecha límite: " FontWeight="SemiBold" FontSize="11" Margin="12,0,0,0" />
-                                    <DatePicker SelectedDate="{Binding FechaVencimiento, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                ToolTip="Cambiar la fecha límite de esta tarea" />
-                                </StackPanel>
-                            </StackPanel>
-                            <Button Content="Eliminar" Margin="8,0,0,0" VerticalAlignment="Top"
-                                    Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
-                                    CommandParameter="{Binding}" />
-                        </StackPanel>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
-
+        </ScrollViewer>
     </Grid>
 </Window>

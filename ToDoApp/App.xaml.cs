@@ -26,6 +26,7 @@ namespace ToDoApp
                 {
                     services.AddDbContext<AppDbContext>(opts => opts.UseSqlite("Data Source=todo.db"));
                     services.AddScoped<TodoService>();
+                    services.AddScoped<TodoListService>();
                     services.AddSingleton<MainViewModel>();
                     services.AddSingleton<MainWindow>();
                 })

@@ -81,7 +81,11 @@ namespace ToDoApp.Models
             }
         }
 
-        public DateTime FechaCreacion { get; } = DateTime.Now;
+        // Nota: antes era "{ get; }" (sin setter), lo que hacía que EF Core nunca
+        // la mapeara a columna (no aparecía en el snapshot del modelo) y que se
+        // recalculara a "ahora" cada vez que la entidad se recargaba desde la DB.
+        // Con setter, EF la persiste como cualquier otra propiedad.
+        public DateTime FechaCreacion { get; set; } = DateTime.Now;
 
         public DateTime? FechaVencimiento
         {
@@ -95,6 +99,11 @@ namespace ToDoApp.Models
                 }
             }
         }
+
+        /// <summary>FK a la lista (columna del board) a la que pertenece esta tarea. Requerida.</summary>
+        public int TodoListId { get; set; }
+
+        public TodoList? TodoList { get; set; }
 
         public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged(string name) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));

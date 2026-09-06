@@ -8,115 +8,196 @@ namespace ToDoApp.Tests.ViewModels
 {
     public class MainViewModelTests
     {
-        private static MainViewModel CreateViewModel(out TodoService service)
+        private static MainViewModel CreateViewModel(out TodoService todoService, out TodoListService todoListService)
         {
             var options = new DbContextOptionsBuilder<AppDbContext>()
                 .UseInMemoryDatabase(Guid.NewGuid().ToString())
                 .Options;
-            service = new TodoService(new AppDbContext(options));
-            return new MainViewModel(service);
+            var db = new AppDbContext(options);
+            // El seed de HasData (lista "Mis Tareas") solo se materializa al crear
+            // el esquema; con InMemory eso requiere EnsureCreated explícito (no hay
+            // Migrate() para este proveedor).
+            db.Database.EnsureCreated();
+            todoService = new TodoService(db);
+            todoListService = new TodoListService(db);
+            return new MainViewModel(todoService, todoListService);
         }
 
         [Fact]
-        public async Task InitializeAsync_LoadsExistingItems_IntoItemsCollection()
+        public async Task InitializeAsync_CreatesDefaultListColumn_FromSeedData()
         {
-            var vm = CreateViewModel(out var service);
-            await service.AddAsync(new TodoItem { Title = "Existente" });
+            var vm = CreateViewModel(out _, out _);
 
             await vm.InitializeAsync();
 
-            Assert.Single(vm.Items);
-            Assert.Equal("Existente", vm.Items[0].Title);
+            Assert.Single(vm.Lists);
+            Assert.Equal(TodoList.NombrePredeterminada, vm.Lists[0].Nombre);
+            Assert.True(vm.Lists[0].EsPredeterminada);
         }
 
         [Fact]
-        public void CanAdd_IsFalse_WhenNewTitleIsEmpty()
+        public async Task InitializeAsync_GroupsExistingItems_IntoTheirOwnList()
         {
-            var vm = CreateViewModel(out _);
+            var vm = CreateViewModel(out var todoService, out var todoListService);
+            var otraLista = await todoListService.AddAsync("Programación");
+            await todoService.AddAsync(new TodoItem { Title = "En Mis Tareas", TodoListId = 1 });
+            await todoService.AddAsync(new TodoItem { Title = "En Programación", TodoListId = otraLista.Id });
 
-            Assert.False(vm.AddTaskCommand.CanExecute(null));
+            await vm.InitializeAsync();
+
+            var misTareas = vm.Lists.Single(l => l.EsPredeterminada);
+            var programacion = vm.Lists.Single(l => l.Id == otraLista.Id);
+            Assert.Single(misTareas.Items);
+            Assert.Equal("En Mis Tareas", misTareas.Items[0].Title);
+            Assert.Single(programacion.Items);
+            Assert.Equal("En Programación", programacion.Items[0].Title);
         }
 
         [Fact]
-        public void CanAdd_IsTrue_WhenNewTitleIsSet()
+        public async Task InitializeAsync_PutsCompletedItems_InCompletedBucket()
         {
-            var vm = CreateViewModel(out _);
+            var vm = CreateViewModel(out var todoService, out _);
+            await todoService.AddAsync(new TodoItem { Title = "Hecha", TodoListId = 1, Estado = TodoEstado.Completado });
 
-            vm.NewTitle = "Nueva tarea";
+            await vm.InitializeAsync();
 
-            Assert.True(vm.AddTaskCommand.CanExecute(null));
+            var column = vm.Lists.Single();
+            Assert.Empty(column.Items);
+            Assert.Single(column.CompletedItems);
         }
 
         [Fact]
-        public void CanAdd_IsFalse_WhenNewTitleIsWhitespace()
+        public async Task AddList_CreatesNewColumn_AndPersists()
         {
-            var vm = CreateViewModel(out _);
+            var vm = CreateViewModel(out _, out var todoListService);
+            await vm.InitializeAsync();
 
-            vm.NewTitle = "   ";
-
-            Assert.False(vm.AddTaskCommand.CanExecute(null));
-        }
-
-        [Fact]
-        public async Task AddItem_WithBlankTitle_DoesNotAddToItemsOrPersist()
-        {
-            var vm = CreateViewModel(out var service);
-            vm.NewTitle = "   ";
-
-            vm.AddTaskCommand.Execute(null);
-            await Task.Delay(50); // AddItem is async void; let any (skipped) work settle.
-
-            Assert.Empty(vm.Items);
-            Assert.Empty(await service.GetAllAsync());
-        }
-
-        [Fact]
-        public async Task AddItem_WithValidTitle_AddsToItems_PersistsAndClearsInputs()
-        {
-            var vm = CreateViewModel(out var service);
-            vm.NewTitle = "Comprar leche";
-            vm.NewDescription = "Descremada";
-
-            vm.AddTaskCommand.Execute(null);
-            await Task.Delay(50); // AddItem is async void; wait for the fire-and-forget save.
-
-            Assert.Single(vm.Items);
-            Assert.Equal("Comprar leche", vm.Items[0].Title);
-            Assert.Equal(string.Empty, vm.NewTitle);
-            Assert.Equal(string.Empty, vm.NewDescription);
-            Assert.Single(await service.GetAllAsync());
-        }
-
-        [Fact]
-        public async Task TogglingItemIsDone_PersistsChange()
-        {
-            var vm = CreateViewModel(out var service);
-            vm.NewTitle = "Marcar completa";
-            vm.AddTaskCommand.Execute(null);
+            vm.NewListName = "Ayuntamiento";
+            vm.AddListCommand.Execute(null);
             await Task.Delay(50);
-            var item = vm.Items[0];
 
-            item.IsDone = true;
-            await Task.Delay(50); // Item_PropertyChanged persists asynchronously.
+            Assert.Equal(2, vm.Lists.Count);
+            Assert.Contains(vm.Lists, l => l.Nombre == "Ayuntamiento");
+            Assert.Equal(string.Empty, vm.NewListName);
+            Assert.Contains(await todoListService.GetAllAsync(), l => l.Nombre == "Ayuntamiento");
+        }
 
-            var persisted = (await service.GetAllAsync()).Single();
+        [Fact]
+        public void AddListCommand_CanExecute_IsFalse_WhenNameIsEmpty()
+        {
+            var vm = CreateViewModel(out _, out _);
+
+            Assert.False(vm.AddListCommand.CanExecute(null));
+        }
+
+        [Fact]
+        public async Task ColumnAddTask_AddsToItems_PersistsWithCorrectList()
+        {
+            var vm = CreateViewModel(out var todoService, out _);
+            await vm.InitializeAsync();
+            var column = vm.Lists.Single();
+
+            column.NewTaskTitle = "Comprar leche";
+            column.AddTaskCommand.Execute(null);
+            await Task.Delay(50);
+
+            Assert.Single(column.Items);
+            var persisted = (await todoService.GetAllAsync()).Single();
+            Assert.Equal("Comprar leche", persisted.Title);
+            Assert.Equal(column.Id, persisted.TodoListId);
+            Assert.Equal(string.Empty, column.NewTaskTitle);
+        }
+
+        [Fact]
+        public async Task ColumnItem_TogglingEstadoCompletado_MovesToCompletedBucket_AndPersists()
+        {
+            var vm = CreateViewModel(out var todoService, out _);
+            await vm.InitializeAsync();
+            var column = vm.Lists.Single();
+            column.NewTaskTitle = "Marcar completa";
+            column.AddTaskCommand.Execute(null);
+            await Task.Delay(50);
+            var item = column.Items[0];
+
+            item.Estado = TodoEstado.Completado;
+            await Task.Delay(50);
+
+            Assert.Empty(column.Items);
+            Assert.Single(column.CompletedItems);
+            var persisted = (await todoService.GetAllAsync()).Single();
             Assert.True(persisted.IsDone);
         }
 
         [Fact]
-        public async Task DeleteItem_RemovesFromItems_AndPersistence()
+        public async Task ColumnDeleteTask_RemovesFromItems_AndPersistence()
         {
-            var vm = CreateViewModel(out var service);
-            vm.NewTitle = "Para borrar";
-            vm.AddTaskCommand.Execute(null);
+            var vm = CreateViewModel(out var todoService, out _);
+            await vm.InitializeAsync();
+            var column = vm.Lists.Single();
+            column.NewTaskTitle = "Para borrar";
+            column.AddTaskCommand.Execute(null);
             await Task.Delay(50);
-            var item = vm.Items[0];
+            var item = column.Items[0];
 
-            vm.DeleteCommand.Execute(item);
+            column.DeleteTaskCommand.Execute(item);
             await Task.Delay(50);
 
-            Assert.Empty(vm.Items);
-            Assert.Empty(await service.GetAllAsync());
+            Assert.Empty(column.Items);
+            Assert.Empty(await todoService.GetAllAsync());
+        }
+
+        [Fact]
+        public async Task DeleteListAsync_OnDefaultList_DoesNothing()
+        {
+            var vm = CreateViewModel(out _, out _);
+            await vm.InitializeAsync();
+            var defaultColumn = vm.Lists.Single();
+
+            await vm.DeleteListAsync(defaultColumn, moverTareasAMisTareas: false);
+
+            Assert.Single(vm.Lists);
+        }
+
+        [Fact]
+        public async Task DeleteListAsync_MovingTasks_ReassignsThemToDefaultList()
+        {
+            var vm = CreateViewModel(out var todoService, out _);
+            await vm.InitializeAsync();
+            vm.NewListName = "Temporal";
+            vm.AddListCommand.Execute(null);
+            await Task.Delay(50);
+            var columna = vm.Lists.Single(l => l.Nombre == "Temporal");
+            columna.NewTaskTitle = "Sobrevive";
+            columna.AddTaskCommand.Execute(null);
+            await Task.Delay(50);
+
+            await vm.DeleteListAsync(columna, moverTareasAMisTareas: true);
+
+            Assert.Single(vm.Lists); // solo queda "Mis Tareas"
+            var misTareas = vm.Lists.Single();
+            Assert.Single(misTareas.Items);
+            Assert.Equal("Sobrevive", misTareas.Items[0].Title);
+            var persisted = (await todoService.GetAllAsync()).Single();
+            Assert.Equal(misTareas.Id, persisted.TodoListId);
+        }
+
+        [Fact]
+        public async Task DeleteListAsync_DeletingTasks_RemovesThemPermanently()
+        {
+            var vm = CreateViewModel(out var todoService, out _);
+            await vm.InitializeAsync();
+            vm.NewListName = "Temporal";
+            vm.AddListCommand.Execute(null);
+            await Task.Delay(50);
+            var columna = vm.Lists.Single(l => l.Nombre == "Temporal");
+            columna.NewTaskTitle = "No sobrevive";
+            columna.AddTaskCommand.Execute(null);
+            await Task.Delay(50);
+
+            await vm.DeleteListAsync(columna, moverTareasAMisTareas: false);
+
+            Assert.Single(vm.Lists);
+            Assert.Empty(await todoService.GetAllAsync());
         }
     }
 }

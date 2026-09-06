@@ -1,169 +1,107 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
-using System;
-using System.Windows.Input;
 using System.Threading.Tasks;
-using ToDoApp.Models;
+using System.Windows.Input;
 using ToDoApp.Services;
 
 namespace ToDoApp.ViewModels
 {
+    /// <summary>
+    /// Expone el board como una colección de columnas (una por TodoList). Cada
+    /// columna administra sus propias tareas; este ViewModel solo orquesta el
+    /// alta/baja de listas.
+    /// </summary>
     public class MainViewModel : INotifyPropertyChanged
     {
-        private readonly TodoService _service;
+        private readonly TodoService _todoService;
+        private readonly TodoListService _todoListService;
 
-        public MainViewModel(TodoService service)
+        public MainViewModel(TodoService todoService, TodoListService todoListService)
         {
-            _service = service;
+            _todoService = todoService;
+            _todoListService = todoListService;
 
-            // initialize commands
-            AddTaskCommand = new RelayCommand(AddItem, CanAdd);
-            DeleteCommand = new RelayCommand<TodoItem>(DeleteItem);
+            AddListCommand = new RelayCommand(AddList, CanAddList);
         }
+
+        public ObservableCollection<TodoListColumnViewModel> Lists { get; } = new ObservableCollection<TodoListColumnViewModel>();
 
         public async Task InitializeAsync()
         {
-            var items = await _service.GetAllAsync();
-            foreach (var it in items)
+            var lists = (await _todoListService.GetAllAsync()).ToList();
+            var items = (await _todoService.GetAllAsync()).ToList();
+
+            foreach (var list in lists)
             {
-                Items.Add(it);
-                SubscribeItem(it);
+                var column = new TodoListColumnViewModel(list, _todoService, _todoListService);
+                foreach (var item in items.Where(i => i.TodoListId == list.Id))
+                {
+                    column.AddExistingItem(item);
+                }
+                Lists.Add(column);
             }
         }
 
-        public ObservableCollection<TodoItem> Items { get; } = new ObservableCollection<TodoItem>();
-
-        private string _newTitle = string.Empty;
-        private string _newDescription = string.Empty;
-        private DateTime? _newFechaVencimiento;
-        public string NewTitle
+        private string _newListName = string.Empty;
+        public string NewListName
         {
-            get => _newTitle;
+            get => _newListName;
             set
             {
-                if (_newTitle != value)
+                if (_newListName != value)
                 {
-                    _newTitle = value;
+                    _newListName = value;
                     OnPropertyChanged();
-                    (AddTaskCommand as RelayCommand)?.RaiseCanExecuteChanged();
+                    (AddListCommand as RelayCommand)?.RaiseCanExecuteChanged();
                 }
             }
         }
 
-        public string NewDescription
-        {
-            get => _newDescription;
-            set
-            {
-                if (_newDescription != value)
-                {
-                    _newDescription = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
+        public ICommand AddListCommand { get; }
 
-        public DateTime? NewFechaVencimiento
-        {
-            get => _newFechaVencimiento;
-            set
-            {
-                if (_newFechaVencimiento != value)
-                {
-                    _newFechaVencimiento = value;
-                    OnPropertyChanged();
-                    (AddTaskCommand as RelayCommand)?.RaiseCanExecuteChanged();
-                }
-            }
-        }
+        private bool CanAddList() => !string.IsNullOrWhiteSpace(NewListName);
 
-        private string _validationMessage = string.Empty;
+        public async void AddList()
+        {
+            if (string.IsNullOrWhiteSpace(NewListName)) return;
+
+            var list = await _todoListService.AddAsync(NewListName.Trim());
+            Lists.Add(new TodoListColumnViewModel(list, _todoService, _todoListService));
+            NewListName = string.Empty;
+            (AddListCommand as RelayCommand)?.RaiseCanExecuteChanged();
+        }
 
         /// <summary>
-        /// Mensaje descriptivo mostrado en la UI cuando la alta de una tarea falla una validación.
-        /// Vacío cuando no hay ningún error pendiente de mostrar.
+        /// Elimina una lista no predeterminada. Si <paramref name="moverTareasAMisTareas"/> es
+        /// true, sus tareas pasan a la lista predeterminada; si es false, se eliminan junto
+        /// con la lista. La UI (MainWindow) es responsable de preguntarle al usuario cuál de
+        /// las dos opciones quiere antes de llamar a este método.
         /// </summary>
-        public string ValidationMessage
+        public async Task DeleteListAsync(TodoListColumnViewModel column, bool moverTareasAMisTareas)
         {
-            get => _validationMessage;
-            private set
+            if (column.EsPredeterminada) return;
+
+            var affectedItems = column.Items.Concat(column.CompletedItems).ToList();
+
+            await _todoListService.DeleteAsync(column.Id, moverTareasAMisTareas);
+
+            foreach (var item in affectedItems)
+                column.DetachItem(item);
+
+            Lists.Remove(column);
+
+            if (moverTareasAMisTareas)
             {
-                if (_validationMessage != value)
+                var defaultColumn = Lists.FirstOrDefault(l => l.EsPredeterminada);
+                if (defaultColumn is not null)
                 {
-                    _validationMessage = value;
-                    OnPropertyChanged();
+                    foreach (var item in affectedItems)
+                        defaultColumn.AddExistingItem(item);
                 }
             }
         }
-
-        public async void AddItem()
-        {
-            if (string.IsNullOrWhiteSpace(NewTitle))
-            {
-                ValidationMessage = "El título es obligatorio.";
-                return;
-            }
-
-            // Validate FechaVencimiento is not before today
-            if (NewFechaVencimiento.HasValue && NewFechaVencimiento.Value.Date < DateTime.Today)
-            {
-                ValidationMessage = "La fecha límite no puede ser anterior a hoy.";
-                return;
-            }
-
-            ValidationMessage = string.Empty;
-
-            var item = new TodoItem { Title = NewTitle, Description = NewDescription, FechaVencimiento = NewFechaVencimiento };
-            await _service.AddAsync(item);
-            Items.Add(item);
-            SubscribeItem(item);
-            NewTitle = string.Empty;
-            NewDescription = string.Empty;
-            NewFechaVencimiento = null;
-            // notify command can execute changed
-            (AddTaskCommand as RelayCommand)?.RaiseCanExecuteChanged();
-        }
-
-        private void SubscribeItem(TodoItem item)
-        {
-            item.PropertyChanged += Item_PropertyChanged;
-        }
-
-        private async void Item_PropertyChanged(object? sender, PropertyChangedEventArgs e)
-        {
-            if (sender is TodoItem item)
-            {
-                // Persist changes (e.g., IsDone toggles)
-                await _service.UpdateAsync(item);
-            }
-        }
-
-        public async void DeleteItem(TodoItem? item)
-        {
-            if (item is null) return;
-            try
-            {
-                await _service.DeleteAsync(item.Id);
-            }
-            catch
-            {
-                // ignore for now
-            }
-            item.PropertyChanged -= Item_PropertyChanged;
-            Items.Remove(item);
-        }
-
-        private bool CanAdd()
-        {
-            // Solo el título es requisito para habilitar el botón: una fecha inválida
-            // debe poder intentarse para que AddItem muestre un mensaje descriptivo,
-            // en vez de dejar el botón deshabilitado sin explicación.
-            return !string.IsNullOrWhiteSpace(NewTitle);
-        }
-
-        public ICommand AddTaskCommand { get; }
-        public ICommand DeleteCommand { get; }
 
         public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName] string? name = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));

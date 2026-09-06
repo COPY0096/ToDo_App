@@ -1,6 +1,6 @@
 # ToDo App — Estado Actual del Proyecto
 
-**Última actualización:** 7 de agosto de 2026
+**Última actualización:** 5 de septiembre de 2026
 
 ---
 
@@ -12,7 +12,7 @@ El proyecto corresponde a una aplicación de escritorio desarrollada con **WPF**
 
 **Rama activa:** `main`
 
-**Último commit:** "Merge pull request #1 from COPY0096/fix/ef-core-migrations"
+**Último commit:** Sprint 2 (organización en listas/board) en curso — ver sección propia más abajo.
 
 ---
 
@@ -33,24 +33,27 @@ El proyecto corresponde a una aplicación de escritorio desarrollada con **WPF**
 
 ```plaintext
 ToDoApp/
-├── Commands/
-│   └── RelayCommand.cs                    ✓ Implementado
-│
 ├── Data/
-│   └── AppDbContext.cs                    ✓ Entity Framework configurado
+│   ├── AppDbContext.cs                    ✓ EF Core + relación TodoList 1→* TodoItem + seed
+│   ├── AppDbContextFactory.cs             ✓ Design-time factory para `dotnet ef`
+│   └── Migrations/                        ✓ InitialCreate, AddTodoLists
 │
 ├── Models/
-│   └── TodoItem.cs                        ✓ Modelo con INotifyPropertyChanged
+│   ├── TodoItem.cs                        ✓ Modelo con INotifyPropertyChanged + TodoListId
+│   └── TodoList.cs                        ✓ Columna del board (Sprint 2)
 │
 ├── Services/
-│   └── TodoService.cs                     ✓ CRUD con async/await
+│   ├── TodoService.cs                     ✓ CRUD con async/await
+│   └── TodoListService.cs                 ✓ CRUD de listas + borrado mover/eliminar (Sprint 2)
 │
 ├── ViewModels/
-│   └── MainViewModel.cs                   ✓ Observable collection y commands
+│   ├── MainViewModel.cs                   ✓ Orquesta las columnas del board
+│   ├── TodoListColumnViewModel.cs         ✓ Una columna: tareas activas/completadas (Sprint 2)
+│   └── RelayCommand.cs                    ✓ Implementado
 │
 ├── Views/
-│   └── MainWindow.xaml                    ✓ UI con bindings
-│   └── MainWindow.xaml.cs                 ✓ Code-behind
+│   ├── MainWindow.xaml                    ✓ Board de columnas con bindings
+│   └── MainWindow.xaml.cs                 ✓ Code-behind (init + confirmación de borrado de lista)
 │
 ├── App.xaml                               ✓ Configuración de app
 ├── App.xaml.cs                            ✓ Inicialización con DI
@@ -81,7 +84,7 @@ ToDoApp/
 
 ### Sprint 1 — Gestión de Tareas (CRUD Básico)
 
-**Estado:** ✅ **EN PROGRESO (90%)**
+**Estado:** ✅ **COMPLETADO (100%)** — edición en línea, estados visuales, validaciones descriptivas y etiquetas claras agregadas.
 
 #### **Core CRUD**
 
@@ -216,6 +219,29 @@ Elementos:
 
 ---
 
+---
+
+### Sprint 2 — Organización (Listas / Board)
+
+**Estado:** 🟡 **EN PROGRESO** — modelo, migración, servicios, ViewModel y UI implementados; falta verificación manual en la app real (ver [SPRINT2.md](../SPRINT2.md)).
+
+| Ítem | Estado | Detalles |
+|---|---|---|
+| Modelo `TodoList` | ✅ | `Id`, `Nombre`, `Orden`, `FechaCreacion`, `EsPredeterminada` |
+| `TodoItem.TodoListId` (FK) | ✅ | Requerida; relación 1 lista → * tareas, `DeleteBehavior.Restrict` |
+| Lista predeterminada "Mis Tareas" | ✅ | Sembrada vía `HasData` (Id=1); no eliminable |
+| Migración `AddTodoLists` | ✅ | Backfill automático: tareas existentes del Sprint 1 quedan asignadas a "Mis Tareas" (`DEFAULT 1` en la columna nueva) |
+| `TodoListService` | ✅ | CRUD de listas; `DeleteAsync` pregunta mover-vs-eliminar tareas, no es un comportamiento fijo |
+| Board en `MainWindow.xaml` | ✅ | Columnas por lista, alta rápida "+ Add a task", sección "Completed (N)" colapsable, "+ Add new list" |
+| Tests | ✅ | 37/37 en verde (`TodoListServiceTests` nuevo + `MainViewModelTests` reescrito para columnas) |
+| Verificación manual en la app | ⬜ | Pendiente — correr `dotnet run` y revisar visualmente (ver checklist en SPRINT2.md) |
+
+**Fuera de alcance de este sprint** (ver [SPRINT2.md](../SPRINT2.md) para el detalle): subtareas (Sprint 3), integración con Google Tasks, menú completo de lista (Sort/Share/Print/Export/papelera), etiquetas/adjuntos por tarea, drag & drop de columnas.
+
+**Bug preexistente corregido de paso:** `TodoItem.FechaCreacion` no tenía setter, por lo que EF Core nunca la mapeaba a columna (no aparecía en el snapshot del modelo) y se recalculaba a "ahora" en cada carga desde la DB. Ahora tiene setter y se persiste correctamente; las tareas creadas antes de este fix quedan con una fecha centinela (`0001-01-01`) ya que su fecha real de creación nunca se guardó.
+
+---
+
 ## ✅ Testing
 
 **Estado:** Suite inicial de unit tests agregada (proyecto `ToDoApp.Tests`, xUnit).
@@ -225,7 +251,8 @@ Elementos:
 | **Modelo** (`TodoItem`) | ✅ | Sincronización `IsDone`↔`Estado`, notificación `INotifyPropertyChanged` |
 | **Servicio** (`TodoService`) | ✅ | CRUD completo contra EF Core InMemory (no toca SQLite real) |
 | **Comandos** (`RelayCommand`/`RelayCommand<T>`) | ✅ | `CanExecute`, `Execute`, `RaiseCanExecuteChanged` |
-| **ViewModel** (`MainViewModel`) | ✅ | Carga inicial, validación de alta, add/toggle/delete end-to-end |
+| **ViewModel** (`MainViewModel`, `TodoListColumnViewModel`) | ✅ | Carga inicial agrupada por lista, alta/borrado de listas y tareas, mover-vs-eliminar al borrar lista |
+| **Servicio** (`TodoListService`) | ✅ | CRUD de listas, borrado predeterminado bloqueado, mover/eliminar tareas |
 | Integration tests (UI/E2E) | ⬜ | No implementado |
 
 ```powershell
@@ -233,7 +260,7 @@ Elementos:
 dotnet test ToDoApp/ToDoApp.slnx
 ```
 
-27 tests, todos en verde al momento de este commit.
+37 tests, todos en verde al momento de este commit (27 de Sprint 1 + 10 nuevos de Sprint 2).
 
 ---
 
@@ -304,10 +331,10 @@ dotnet test ToDoApp/ToDoApp.slnx
 | Sprint | Completitud | Estado | Nota |
 |---|---|---|---|
 | **Sprint 0** | 100% | ✅ Completado | Arquitectura base lista |
-| **Sprint 1** | 90% | 🟡 En progreso | CRUD funcional, falta UI avanzada |
-| **Sprint 2** | 0% | ⬜ No iniciado | Categorías/Listas planificado |
+| **Sprint 1** | 100% | ✅ Completado | CRUD, edición en línea, estados visuales, validaciones |
+| **Sprint 2** | ~85% | 🟡 En progreso | Listas/board implementado; falta verificación manual en la app |
 | **Sprint 3** | 0% | ⬜ No iniciado | Subtareas jerárquicas |
-| **Total Proyecto** | ~30% | 🟡 En progreso | Fase 1 de 4 completada |
+| **Total Proyecto** | ~55% | 🟡 En progreso | Fase 2 de 4 casi completa |
 
 ---
 
