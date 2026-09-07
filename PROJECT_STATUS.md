@@ -270,6 +270,27 @@ colección a mano y terminaba duplicando entradas por esto mismo (detalle en SPR
 
 ---
 
+### Mover tareas entre listas
+
+**Estado:** 🟡 **Implementado, pendiente verificación manual en la app real.** No estaba
+en el alcance de ningún sprint (Sprint 2 no lo incluyó — ver su "Fuera de alcance"; Sprint
+3 lo excluye explícitamente para subtareas) hasta que se pidió como feature aparte.
+
+- Selector "Lista" en cada tarjeta de tarea de primer nivel (`ComboBox` con las columnas
+  del board); elegir otra lista mueve la tarea al instante. Las subtareas se mueven
+  siempre junto con su tarea padre (mantienen la misma lista); una subtarea no se puede
+  mover de forma independiente (`MainViewModel.MoveTaskAsync` es no-op para subtareas).
+- `TodoService.MoveToListAsync` persiste el cambio de `TodoListId` de la tarea y de todas
+  sus subtareas en una sola operación.
+- **Bug preexistente corregido de paso:** `TodoListColumnViewModel.DetachItem` no
+  desuscribía las subtareas de una tarea al sacarla de la columna (solo la tarea misma),
+  dejándolas escuchando el `PropertyChanged` de la columna vieja. No importaba mientras
+  las tareas no se movían entre columnas; con esta feature sí, así que se corrigió.
+- Tests: 7 nuevos (`TodoServiceTests.MoveToListAsync_*` + `MainViewModelTests.MoveTaskAsync_*`).
+- Verificación manual en la app: ⬜ pendiente.
+
+---
+
 ## ✅ Testing
 
 **Estado:** Suite inicial de unit tests agregada (proyecto `ToDoApp.Tests`, xUnit).
@@ -290,7 +311,7 @@ colección a mano y terminaba duplicando entradas por esto mismo (detalle en SPR
 dotnet test ToDoApp/ToDoApp.slnx
 ```
 
-45 tests, todos en verde al momento de este commit (27 de Sprint 1 + 10 de Sprint 2 + 8 nuevos de Sprint 3).
+52 tests, todos en verde al momento de este commit (27 de Sprint 1 + 10 de Sprint 2 + 8 de Sprint 3 + 7 nuevos de mover tareas entre listas).
 
 ---
 

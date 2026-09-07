@@ -51,6 +51,29 @@ namespace ToDoApp.Services
             return item;
         }
 
+        /// <summary>
+        /// Mueve una tarea de primer nivel (y sus subtareas, si tiene) a otra lista.
+        /// No-op si ya está en esa lista o si <paramref name="taskId"/> no existe.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">
+        /// Si <paramref name="taskId"/> es una subtarea: no se pueden mover de forma
+        /// independiente de su tarea padre (ver SPRINT3.md, fuera de alcance).
+        /// </exception>
+        public async Task MoveToListAsync(int taskId, int targetListId)
+        {
+            var task = await _db.TodoItems.Include(t => t.SubTasks).FirstOrDefaultAsync(t => t.Id == taskId);
+            if (task is null) return;
+            if (task.ParentTaskId is not null)
+                throw new InvalidOperationException("No se puede mover una subtarea de forma independiente.");
+            if (task.TodoListId == targetListId) return;
+
+            task.TodoListId = targetListId;
+            foreach (var subTask in task.SubTasks)
+                subTask.TodoListId = targetListId;
+
+            await _db.SaveChangesAsync();
+        }
+
         public async Task<TodoItem> UpdateAsync(TodoItem item)
         {
             _db.TodoItems.Update(item);

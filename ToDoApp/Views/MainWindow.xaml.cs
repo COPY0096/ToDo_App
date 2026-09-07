@@ -1,4 +1,6 @@
 using System.Windows;
+using System.Windows.Controls;
+using ToDoApp.Models;
 using ToDoApp.ViewModels;
 
 namespace ToDoApp.Views
@@ -57,6 +59,20 @@ namespace ToDoApp.Views
             if (resultado == MessageBoxResult.Cancel) return;
 
             await vm.DeleteListAsync(column, moverTareasAMisTareas: resultado == MessageBoxResult.Yes);
+        }
+
+        // El combo de "Lista" en cada tarjeta también dispara SelectionChanged al
+        // poblarse la primera vez con el valor actual (no solo cuando el usuario elige
+        // algo distinto); MainViewModel.MoveTaskAsync ya es no-op si la tarea ya está en
+        // esa lista, así que ese primer disparo no hace nada.
+        private async void MoveTask_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (sender is not ComboBox combo) return;
+            if (combo.DataContext is not TodoItem task) return;
+            if (combo.SelectedItem is not TodoListColumnViewModel targetColumn) return;
+            if (DataContext is not MainViewModel vm) return;
+
+            await vm.MoveTaskAsync(task, targetColumn);
         }
     }
 }

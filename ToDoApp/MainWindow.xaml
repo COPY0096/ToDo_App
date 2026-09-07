@@ -90,6 +90,15 @@
                         <DatePicker SelectedDate="{Binding FechaVencimiento, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                     ToolTip="Cambiar la fecha límite de esta tarea" />
                     </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                        <TextBlock Text="Lista: " FontWeight="SemiBold" FontSize="10" VerticalAlignment="Center" />
+                        <ComboBox FontSize="10" MinWidth="90"
+                                  ItemsSource="{Binding DataContext.Lists, RelativeSource={RelativeSource AncestorType=ItemsControl, AncestorLevel=2}}"
+                                  DisplayMemberPath="Nombre" SelectedValuePath="Id"
+                                  SelectedValue="{Binding TodoListId, Mode=OneWay}"
+                                  SelectionChanged="MoveTask_SelectionChanged"
+                                  ToolTip="Mover esta tarea a otra lista" />
+                    </StackPanel>
 
                     <!-- Subtareas (Sprint 3): indentadas debajo de la tarjeta de su padre;
                          nunca aparecen como tarjetas sueltas en la columna. -->

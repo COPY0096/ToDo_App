@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using ToDoApp.Models;
 using ToDoApp.Services;
 
 namespace ToDoApp.ViewModels
@@ -78,6 +79,24 @@ namespace ToDoApp.ViewModels
             Lists.Add(new TodoListColumnViewModel(list, _todoService, _todoListService));
             NewListName = string.Empty;
             (AddListCommand as RelayCommand)?.RaiseCanExecuteChanged();
+        }
+
+        /// <summary>
+        /// Mueve una tarea de primer nivel (y sus subtareas) de su columna actual a
+        /// <paramref name="targetColumn"/>. No-op si ya está ahí, o si <paramref name="task"/>
+        /// es una subtarea (no se pueden mover de forma independiente de su padre).
+        /// </summary>
+        public async Task MoveTaskAsync(TodoItem task, TodoListColumnViewModel targetColumn)
+        {
+            if (task.ParentTaskId is not null) return;
+            if (task.TodoListId == targetColumn.Id) return;
+
+            var sourceColumn = Lists.FirstOrDefault(l => l.Id == task.TodoListId);
+            sourceColumn?.DetachItem(task);
+
+            await _todoService.MoveToListAsync(task.Id, targetColumn.Id);
+
+            targetColumn.AddExistingItem(task);
         }
 
         /// <summary>

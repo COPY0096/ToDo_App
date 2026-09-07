@@ -144,6 +144,54 @@ namespace ToDoApp.Tests.Services
         }
 
         [Fact]
+        public async Task MoveToListAsync_UpdatesTodoListId()
+        {
+            var service = CreateService(out var db);
+            var task = await service.AddAsync(new TodoItem { Title = "Tarea", TodoListId = 1 });
+
+            await service.MoveToListAsync(task.Id, targetListId: 2);
+
+            var reloaded = await db.TodoItems.FindAsync(task.Id);
+            Assert.Equal(2, reloaded!.TodoListId);
+        }
+
+        [Fact]
+        public async Task MoveToListAsync_MovesSubTasksToTheSameTargetList()
+        {
+            var service = CreateService(out var db);
+            var parent = await service.AddAsync(new TodoItem { Title = "Padre", TodoListId = 1 });
+            var subTask = await service.AddSubTaskAsync(new TodoItem { Title = "Hija" }, parent.Id);
+
+            await service.MoveToListAsync(parent.Id, targetListId: 2);
+
+            var reloadedParent = await db.TodoItems.FindAsync(parent.Id);
+            var reloadedSubTask = await db.TodoItems.FindAsync(subTask.Id);
+            Assert.Equal(2, reloadedParent!.TodoListId);
+            Assert.Equal(2, reloadedSubTask!.TodoListId);
+        }
+
+        [Fact]
+        public async Task MoveToListAsync_ThrowsIfTaskIsASubTask()
+        {
+            var service = CreateService(out _);
+            var parent = await service.AddAsync(new TodoItem { Title = "Padre" });
+            var subTask = await service.AddSubTaskAsync(new TodoItem { Title = "Hija" }, parent.Id);
+
+            await Assert.ThrowsAsync<InvalidOperationException>(
+                () => service.MoveToListAsync(subTask.Id, targetListId: 2));
+        }
+
+        [Fact]
+        public async Task MoveToListAsync_NonExistentId_DoesNotThrow()
+        {
+            var service = CreateService(out _);
+
+            var exception = await Record.ExceptionAsync(() => service.MoveToListAsync(999, targetListId: 2));
+
+            Assert.Null(exception);
+        }
+
+        [Fact]
         public void SynchronousWrappers_DelegateTo_AsyncImplementations()
         {
             var service = CreateService(out var db);

@@ -206,6 +206,76 @@ namespace ToDoApp.Tests.ViewModels
         }
 
         [Fact]
+        public async Task MoveTaskAsync_MovesTaskAndSubTasks_BetweenColumns_AndPersists()
+        {
+            var vm = CreateViewModel(out var todoService, out var todoListService);
+            await vm.InitializeAsync();
+            var origen = vm.Lists.Single(l => l.EsPredeterminada);
+            var destinoLista = await todoListService.AddAsync("Programación");
+            var destino = new TodoListColumnViewModel(destinoLista, todoService, todoListService);
+            vm.Lists.Add(destino);
+
+            origen.NewTaskTitle = "Con subtarea";
+            origen.AddTaskCommand.Execute(null);
+            await Task.Delay(50);
+            var task = origen.Items[0];
+            task.NewSubTaskTitle = "Hija";
+            origen.AddSubTaskCommand.Execute(task);
+            await Task.Delay(50);
+            var subTask = task.SubTasks[0];
+
+            await vm.MoveTaskAsync(task, destino);
+
+            Assert.Empty(origen.Items);
+            Assert.Single(destino.Items);
+            Assert.Same(task, destino.Items[0]);
+            Assert.Single(destino.Items[0].SubTasks);
+
+            var persistedTask = (await todoService.GetAllAsync()).Single(t => t.Id == task.Id);
+            var persistedSubTask = (await todoService.GetAllAsync()).Single(t => t.Id == subTask.Id);
+            Assert.Equal(destino.Id, persistedTask.TodoListId);
+            Assert.Equal(destino.Id, persistedSubTask.TodoListId);
+        }
+
+        [Fact]
+        public async Task MoveTaskAsync_NoOp_WhenTargetIsSameList()
+        {
+            var vm = CreateViewModel(out _, out _);
+            await vm.InitializeAsync();
+            var column = vm.Lists.Single();
+            column.NewTaskTitle = "Se queda";
+            column.AddTaskCommand.Execute(null);
+            await Task.Delay(50);
+            var task = column.Items[0];
+
+            await vm.MoveTaskAsync(task, column);
+
+            Assert.Single(column.Items);
+            Assert.Same(task, column.Items[0]);
+        }
+
+        [Fact]
+        public async Task MoveTaskAsync_NoOp_ForSubTask()
+        {
+            var vm = CreateViewModel(out var todoService, out var todoListService);
+            await vm.InitializeAsync();
+            var origen = vm.Lists.Single();
+            var destino = new TodoListColumnViewModel(await todoListService.AddAsync("Otra"), todoService, todoListService);
+            origen.NewTaskTitle = "Padre";
+            origen.AddTaskCommand.Execute(null);
+            await Task.Delay(50);
+            var parent = origen.Items[0];
+            parent.NewSubTaskTitle = "Hija";
+            origen.AddSubTaskCommand.Execute(parent);
+            await Task.Delay(50);
+            var subTask = parent.SubTasks[0];
+
+            await vm.MoveTaskAsync(subTask, destino);
+
+            Assert.Single(parent.SubTasks); // no se movió a ningún lado
+        }
+
+        [Fact]
         public async Task DeleteListAsync_OnDefaultList_DoesNothing()
         {
             var vm = CreateViewModel(out _, out _);

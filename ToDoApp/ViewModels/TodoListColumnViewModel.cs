@@ -111,10 +111,18 @@ namespace ToDoApp.ViewModels
             RaiseCompletedCountChanged();
         }
 
-        /// <summary>Deja de rastrear una tarea (se movió a otra lista o se borró), sin tocar la base de datos.</summary>
+        /// <summary>
+        /// Deja de rastrear una tarea (se movió a otra lista o se borró), sin tocar la base
+        /// de datos. También desuscribe sus subtareas (si tiene) — quedaban "colgadas"
+        /// escuchando el <see cref="Item_PropertyChanged"/> de esta columna aunque la tarea
+        /// ya no le perteneciera más, un bug latente desde Sprint 3 que ahora sí importa al
+        /// poder mover tareas entre listas.
+        /// </summary>
         public void DetachItem(TodoItem item)
         {
             item.PropertyChanged -= Item_PropertyChanged;
+            foreach (var sub in item.SubTasks)
+                sub.PropertyChanged -= Item_PropertyChanged;
             Items.Remove(item);
             CompletedItems.Remove(item);
             RaiseCompletedCountChanged();
