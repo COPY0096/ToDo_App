@@ -1,6 +1,6 @@
 # ToDo App — Estado Actual del Proyecto
 
-**Última actualización:** 5 de septiembre de 2026
+**Última actualización:** 7 de septiembre de 2026
 
 ---
 
@@ -12,7 +12,7 @@ El proyecto corresponde a una aplicación de escritorio desarrollada con **WPF**
 
 **Rama activa:** `main`
 
-**Último commit:** Sprint 2 (organización en listas/board) en curso — ver sección propia más abajo.
+**Último commit:** Sprint 2 (listas/board) — ✅ COMPLETADO y verificado manualmente.
 
 ---
 
@@ -463,5 +463,5 @@ test: Agregación de tests
 
 ---
 
-**Estado:** El proyecto está en fase de desarrollo activo. Sprint 1 está casi completo con funcionalidad CRUD básica funcional, ahora respaldada por migraciones EF Core y una suite inicial de unit tests. Próximo paso: Sprint 2 con categorías/listas.
+**Estado:** El proyecto está en fase de desarrollo activo. Sprint 0, Sprint 1 y Sprint 2 (listas/board) están completados y verificados. Próximo paso: Sprint 3 (subtareas / jerarquía).
 
