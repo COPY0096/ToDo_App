@@ -242,6 +242,34 @@ Elementos:
 
 ---
 
+### Sprint 3 — Jerarquía (Subtareas)
+
+**Estado:** 🟡 **Implementado, pendiente verificación manual en la app real** (modelo,
+migración, servicios, ViewModel, UI y tests unitarios hechos siguiendo el plan de
+[SPRINT3.md](../SPRINT3.md); falta que confirmes el flujo a mano en la app, como se hizo
+en Sprint 2).
+
+| Ítem | Estado | Detalles |
+|---|---|---|
+| Auto-referencia en `TodoItem` | ✅ | `ParentTaskId` (nullable) + `ParentTask` + `SubTasks` (`ObservableCollection<TodoItem>`), un solo nivel |
+| Migración `AddSubtasks` | ✅ | Columna nullable + FK + índice, sin backfill (tareas existentes quedan como tareas de primer nivel) |
+| `TodoService` | ✅ | `GetSubTasksAsync`, `AddSubTaskAsync` (hereda la lista del padre, rechaza subtarea-de-subtarea) |
+| `TodoListColumnViewModel` | ✅ | `AddSubTaskCommand`/`DeleteSubTaskCommand`; las subtareas nunca cuentan como tarjeta propia de la columna |
+| UI en `MainWindow.xaml` | ✅ | Subtareas indentadas dentro de la tarjeta del padre (plantilla simplificada: checkbox + título) + "+ Add a subtask" |
+| Tests | ✅ | 45/45 en verde (8 nuevos: `TodoServiceTests` + `MainViewModelTests` para subtareas) |
+| Verificación manual en la app | ⬜ | Pendiente — falta que confirmes vos el flujo real (agregar subtarea, completarla, borrar el padre en cascada) |
+
+**Decisiones tomadas para este sprint** (ver [SPRINT3.md](../SPRINT3.md)): subtarea
+comparte lista con su padre, límite de un solo nivel, plantilla simplificada (sin
+descripción ni fecha propia), borrado en cascada sin diálogo de confirmación extra.
+
+**Nota de implementación:** no hizo falta poblar `SubTasks` a mano en el ViewModel — EF
+Core hace fixup automático de esa navegación entre entidades trackeadas, porque toda la
+app comparte un único `AppDbContext` de larga duración. El primer intento poblaba la
+colección a mano y terminaba duplicando entradas por esto mismo (detalle en SPRINT3.md).
+
+---
+
 ## ✅ Testing
 
 **Estado:** Suite inicial de unit tests agregada (proyecto `ToDoApp.Tests`, xUnit).
@@ -253,6 +281,8 @@ Elementos:
 | **Comandos** (`RelayCommand`/`RelayCommand<T>`) | ✅ | `CanExecute`, `Execute`, `RaiseCanExecuteChanged` |
 | **ViewModel** (`MainViewModel`, `TodoListColumnViewModel`) | ✅ | Carga inicial agrupada por lista, alta/borrado de listas y tareas, mover-vs-eliminar al borrar lista |
 | **Servicio** (`TodoListService`) | ✅ | CRUD de listas, borrado predeterminado bloqueado, mover/eliminar tareas |
+| **Servicio** (`TodoService`, subtareas) | ✅ | `AddSubTaskAsync`/`GetSubTasksAsync`, límite de 1 nivel, herencia de lista, cascada al borrar el padre |
+| **ViewModel** (subtareas) | ✅ | Árbol armado al cargar, alta/borrado de subtarea, persistencia con la lista correcta |
 | Integration tests (UI/E2E) | ⬜ | No implementado |
 
 ```powershell
@@ -260,7 +290,7 @@ Elementos:
 dotnet test ToDoApp/ToDoApp.slnx
 ```
 
-37 tests, todos en verde al momento de este commit (27 de Sprint 1 + 10 nuevos de Sprint 2).
+45 tests, todos en verde al momento de este commit (27 de Sprint 1 + 10 de Sprint 2 + 8 nuevos de Sprint 3).
 
 ---
 
@@ -333,8 +363,8 @@ dotnet test ToDoApp/ToDoApp.slnx
 | **Sprint 0** | 100% | ✅ Completado | Arquitectura base lista |
 | **Sprint 1** | 100% | ✅ Completado | CRUD, edición en línea, estados visuales, validaciones |
 | **Sprint 2** | 100% | ✅ Completado | Listas/board implementado y verificado manualmente |
-| **Sprint 3** | 0% | ⬜ No iniciado | Subtareas jerárquicas |
-| **Total Proyecto** | ~60% | 🟡 En progreso | Fase 2 de 4 completada |
+| **Sprint 3** | ~90% | 🟡 Implementado, falta verificación manual | Subtareas jerárquicas (un nivel) |
+| **Total Proyecto** | ~85% | 🟡 En progreso | Fase 3 de 4 casi completa |
 
 ---
 
@@ -362,7 +392,7 @@ dotnet test ToDoApp/ToDoApp.slnx
 
 ### Fase Sprint 3 (Jerarquía)
 
-**Estimación:** 4-5 días
+**Estimación:** 4-5 días. Plan detallado en [SPRINT3.md](SPRINT3.md).
 
 11. Auto-referencia en TodoItem (subtareas)
 12. UI for nested tasks
@@ -463,5 +493,5 @@ test: Agregación de tests
 
 ---
 
-**Estado:** El proyecto está en fase de desarrollo activo. Sprint 0, Sprint 1 y Sprint 2 (listas/board) están completados y verificados. Próximo paso: Sprint 3 (subtareas / jerarquía).
+**Estado:** El proyecto está en fase de desarrollo activo. Sprint 0, Sprint 1 y Sprint 2 (listas/board) están completados y verificados. Sprint 3 (subtareas/jerarquía) está implementado y con 45/45 tests en verde; falta la verificación manual del usuario en la app real antes de darlo por completado.
 

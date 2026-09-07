@@ -82,6 +82,68 @@ namespace ToDoApp.Tests.Services
         }
 
         [Fact]
+        public async Task AddSubTaskAsync_SetsParentId_AndInheritsParentList()
+        {
+            var service = CreateService(out var db);
+            var parent = await service.AddAsync(new TodoItem { Title = "Padre", TodoListId = 7 });
+            var subTask = new TodoItem { Title = "Hija", TodoListId = 999 }; // debe ser ignorado
+
+            var added = await service.AddSubTaskAsync(subTask, parent.Id);
+
+            Assert.Equal(parent.Id, added.ParentTaskId);
+            Assert.Equal(7, added.TodoListId);
+            Assert.Equal(2, await db.TodoItems.CountAsync());
+        }
+
+        [Fact]
+        public async Task AddSubTaskAsync_ThrowsIfParentDoesNotExist()
+        {
+            var service = CreateService(out _);
+
+            await Assert.ThrowsAsync<InvalidOperationException>(
+                () => service.AddSubTaskAsync(new TodoItem { Title = "Huérfana" }, parentTaskId: 999));
+        }
+
+        [Fact]
+        public async Task AddSubTaskAsync_ThrowsIfParentIsAlreadyASubTask()
+        {
+            var service = CreateService(out _);
+            var grandParent = await service.AddAsync(new TodoItem { Title = "Abuela" });
+            var parent = await service.AddSubTaskAsync(new TodoItem { Title = "Madre" }, grandParent.Id);
+
+            await Assert.ThrowsAsync<InvalidOperationException>(
+                () => service.AddSubTaskAsync(new TodoItem { Title = "Nieta" }, parent.Id));
+        }
+
+        [Fact]
+        public async Task GetSubTasksAsync_ReturnsOnlyDirectChildrenOfThatParent()
+        {
+            var service = CreateService(out _);
+            var parent = await service.AddAsync(new TodoItem { Title = "Padre" });
+            var otherParent = await service.AddAsync(new TodoItem { Title = "Otro padre" });
+            await service.AddSubTaskAsync(new TodoItem { Title = "Hija 1" }, parent.Id);
+            await service.AddSubTaskAsync(new TodoItem { Title = "Hija 2" }, parent.Id);
+            await service.AddSubTaskAsync(new TodoItem { Title = "No es hija de parent" }, otherParent.Id);
+
+            var subTasks = (await service.GetSubTasksAsync(parent.Id)).ToList();
+
+            Assert.Equal(2, subTasks.Count);
+            Assert.All(subTasks, s => Assert.Equal(parent.Id, s.ParentTaskId));
+        }
+
+        [Fact]
+        public async Task DeleteAsync_OfParent_CascadesToSubTasks()
+        {
+            var service = CreateService(out var db);
+            var parent = await service.AddAsync(new TodoItem { Title = "Padre" });
+            await service.AddSubTaskAsync(new TodoItem { Title = "Hija" }, parent.Id);
+
+            await service.DeleteAsync(parent.Id);
+
+            Assert.Equal(0, await db.TodoItems.CountAsync());
+        }
+
+        [Fact]
         public void SynchronousWrappers_DelegateTo_AsyncImplementations()
         {
             var service = CreateService(out var db);

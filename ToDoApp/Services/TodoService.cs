@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -17,6 +18,34 @@ namespace ToDoApp.Services
 
         public async Task<TodoItem> AddAsync(TodoItem item)
         {
+            _db.TodoItems.Add(item);
+            await _db.SaveChangesAsync();
+            return item;
+        }
+
+        /// <summary>Subtareas de primer nivel de una tarea (Sprint 3).</summary>
+        public async Task<IEnumerable<TodoItem>> GetSubTasksAsync(int parentId) =>
+            await _db.TodoItems.Where(t => t.ParentTaskId == parentId).ToListAsync();
+
+        /// <summary>
+        /// Crea una subtarea bajo <paramref name="parentTaskId"/>. La subtarea hereda la
+        /// lista (TodoListId) de su padre. Límite de un solo nivel: rechaza si la tarea
+        /// padre es en sí misma una subtarea.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">
+        /// Si la tarea padre no existe o ya es una subtarea (profundidad máxima 1 nivel).
+        /// </exception>
+        public async Task<TodoItem> AddSubTaskAsync(TodoItem item, int parentTaskId)
+        {
+            var parent = await _db.TodoItems.FindAsync(parentTaskId);
+            if (parent is null)
+                throw new InvalidOperationException("La tarea padre no existe.");
+            if (parent.ParentTaskId is not null)
+                throw new InvalidOperationException("Una subtarea no puede tener subtareas propias.");
+
+            item.ParentTaskId = parentTaskId;
+            item.TodoListId = parent.TodoListId;
+
             _db.TodoItems.Add(item);
             await _db.SaveChangesAsync();
             return item;

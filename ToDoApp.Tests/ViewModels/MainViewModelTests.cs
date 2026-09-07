@@ -147,6 +147,65 @@ namespace ToDoApp.Tests.ViewModels
         }
 
         [Fact]
+        public async Task InitializeAsync_BuildsSubTaskTree_AndKeepsSubTasksOutOfColumnItems()
+        {
+            var vm = CreateViewModel(out var todoService, out _);
+            var parent = await todoService.AddAsync(new TodoItem { Title = "Padre", TodoListId = 1 });
+            await todoService.AddSubTaskAsync(new TodoItem { Title = "Hija" }, parent.Id);
+
+            await vm.InitializeAsync();
+
+            var column = vm.Lists.Single();
+            Assert.Single(column.Items); // la subtarea no cuenta como tarea propia de la columna
+            Assert.Single(column.Items[0].SubTasks);
+            Assert.Equal("Hija", column.Items[0].SubTasks[0].Title);
+        }
+
+        [Fact]
+        public async Task ColumnAddSubTask_AddsToParentSubTasks_AndPersistsWithSameList()
+        {
+            var vm = CreateViewModel(out var todoService, out _);
+            await vm.InitializeAsync();
+            var column = vm.Lists.Single();
+            column.NewTaskTitle = "Tarea con hijas";
+            column.AddTaskCommand.Execute(null);
+            await Task.Delay(50);
+            var parent = column.Items[0];
+
+            parent.NewSubTaskTitle = "Subtarea nueva";
+            column.AddSubTaskCommand.Execute(parent);
+            await Task.Delay(50);
+
+            Assert.Single(parent.SubTasks);
+            Assert.Equal(string.Empty, parent.NewSubTaskTitle);
+            var persisted = (await todoService.GetSubTasksAsync(parent.Id)).Single();
+            Assert.Equal("Subtarea nueva", persisted.Title);
+            Assert.Equal(parent.TodoListId, persisted.TodoListId);
+        }
+
+        [Fact]
+        public async Task ColumnDeleteSubTask_RemovesFromParent_AndPersistence()
+        {
+            var vm = CreateViewModel(out var todoService, out _);
+            await vm.InitializeAsync();
+            var column = vm.Lists.Single();
+            column.NewTaskTitle = "Tarea con hijas";
+            column.AddTaskCommand.Execute(null);
+            await Task.Delay(50);
+            var parent = column.Items[0];
+            parent.NewSubTaskTitle = "Para borrar";
+            column.AddSubTaskCommand.Execute(parent);
+            await Task.Delay(50);
+            var subTask = parent.SubTasks[0];
+
+            column.DeleteSubTaskCommand.Execute(subTask);
+            await Task.Delay(50);
+
+            Assert.Empty(parent.SubTasks);
+            Assert.Empty(await todoService.GetSubTasksAsync(parent.Id));
+        }
+
+        [Fact]
         public async Task DeleteListAsync_OnDefaultList_DoesNothing()
         {
             var vm = CreateViewModel(out _, out _);

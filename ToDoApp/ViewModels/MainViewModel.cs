@@ -36,7 +36,14 @@ namespace ToDoApp.ViewModels
             foreach (var list in lists)
             {
                 var column = new TodoListColumnViewModel(list, _todoService, _todoListService);
-                foreach (var item in items.Where(i => i.TodoListId == list.Id))
+                var listItems = items.Where(i => i.TodoListId == list.Id).ToList();
+
+                // Solo las tareas de primer nivel entran a la columna. Sus subtareas
+                // (Sprint 3, un solo nivel) NO se agregan a mano: como todas las tareas
+                // se cargaron juntas en la misma consulta de un único AppDbContext de
+                // larga duración, EF Core ya hizo el fixup de ParentTask/SubTasks entre
+                // las entidades trackeadas — item.SubTasks viene poblado solo.
+                foreach (var item in listItems.Where(i => i.ParentTaskId is null))
                 {
                     column.AddExistingItem(item);
                 }

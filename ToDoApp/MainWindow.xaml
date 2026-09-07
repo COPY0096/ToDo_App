@@ -17,6 +17,34 @@
             </ObjectDataProvider.MethodParameters>
         </ObjectDataProvider>
 
+        <!-- Subtarea (Sprint 3): plantilla explícita (x:Key, no implícita por DataType) para
+             que el ItemsControl de SubTasks la use en vez de la tarjeta completa de arriba —
+             evita que una subtarea vuelva a mostrar su propio "+ Add a subtask" (límite de
+             un solo nivel). Solo título + checkbox, sin descripción ni fecha propia. -->
+        <DataTemplate x:Key="SubTaskTemplate" DataType="{x:Type models:TodoItem}">
+            <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                <CheckBox IsChecked="{Binding IsDone, Mode=TwoWay}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                <TextBox Text="{Binding Title, UpdateSourceTrigger=LostFocus}" FontSize="11"
+                         BorderThickness="0" Background="Transparent" Padding="0" VerticalAlignment="Center"
+                         ToolTip="Hacé clic para editar el título de la subtarea">
+                    <TextBox.Style>
+                        <Style TargetType="TextBox">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsDone}" Value="True">
+                                    <Setter Property="TextDecorations" Value="Strikethrough" />
+                                    <Setter Property="Foreground" Value="Gray" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBox.Style>
+                </TextBox>
+                <Button Content="✕" FontSize="9" Padding="4,0" Margin="6,0,0,0" VerticalAlignment="Center"
+                        ToolTip="Eliminar subtarea"
+                        Command="{Binding DataContext.DeleteSubTaskCommand, RelativeSource={RelativeSource AncestorType=ItemsControl, AncestorLevel=2}}"
+                        CommandParameter="{Binding}" />
+            </StackPanel>
+        </DataTemplate>
+
         <!-- Tarjeta de tarea: plantilla implícita para TodoItem, reutilizada tanto en
              la lista activa como en "Completed" de cada columna. -->
         <DataTemplate DataType="{x:Type models:TodoItem}">
@@ -61,6 +89,19 @@
                         <TextBlock Text="Fecha límite: " FontWeight="SemiBold" FontSize="10" VerticalAlignment="Center" />
                         <DatePicker SelectedDate="{Binding FechaVencimiento, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                     ToolTip="Cambiar la fecha límite de esta tarea" />
+                    </StackPanel>
+
+                    <!-- Subtareas (Sprint 3): indentadas debajo de la tarjeta de su padre;
+                         nunca aparecen como tarjetas sueltas en la columna. -->
+                    <ItemsControl ItemsSource="{Binding SubTasks}" ItemTemplate="{StaticResource SubTaskTemplate}"
+                                  Margin="16,4,0,0" />
+                    <StackPanel Orientation="Horizontal" Margin="16,4,0,0">
+                        <TextBox Width="110" FontSize="11" Text="{Binding NewSubTaskTitle, UpdateSourceTrigger=PropertyChanged}"
+                                 ToolTip="Título de la nueva subtarea" />
+                        <Button Content="+ Add a subtask" FontSize="10" Padding="4,1" Margin="6,0,0,0"
+                                Command="{Binding DataContext.AddSubTaskCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                CommandParameter="{Binding}"
+                                ToolTip="Agregar subtarea a esta tarea" />
                     </StackPanel>
                 </StackPanel>
             </Border>

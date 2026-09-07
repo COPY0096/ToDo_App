@@ -24,6 +24,20 @@ namespace ToDoApp.Data
                 .HasForeignKey(t => t.TodoListId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // Auto-referencia para subtareas (Sprint 3, un solo nivel).
+            // Cascade: borrar la tarea padre borra sus subtareas directamente.
+            modelBuilder.Entity<TodoItem>()
+                .HasOne(t => t.ParentTask)
+                .WithMany(t => t.SubTasks)
+                .HasForeignKey(t => t.ParentTaskId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<TodoItem>()
+                .HasIndex(t => t.ParentTaskId);
+
+            // Estado transitorio de UI (ver TodoItem.NewSubTaskTitle), no persistido.
+            modelBuilder.Entity<TodoItem>().Ignore(t => t.NewSubTaskTitle);
+
             // Lista predeterminada sembrada por la migración (y visible también en
             // los tests que usan el proveedor InMemory, que no corre migraciones).
             modelBuilder.Entity<TodoList>().HasData(new TodoList

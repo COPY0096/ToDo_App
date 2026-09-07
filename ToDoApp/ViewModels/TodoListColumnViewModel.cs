@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using ToDoApp.Models;
@@ -26,6 +27,8 @@ namespace ToDoApp.ViewModels
 
             AddTaskCommand = new RelayCommand(AddTask, CanAddTask);
             DeleteTaskCommand = new RelayCommand<TodoItem>(DeleteTask);
+            AddSubTaskCommand = new RelayCommand<TodoItem>(AddSubTask);
+            DeleteSubTaskCommand = new RelayCommand<TodoItem>(DeleteSubTask);
         }
 
         public int Id => List.Id;
@@ -88,13 +91,23 @@ namespace ToDoApp.ViewModels
 
         public ICommand AddTaskCommand { get; }
         public ICommand DeleteTaskCommand { get; }
+        public ICommand AddSubTaskCommand { get; }
+        public ICommand DeleteSubTaskCommand { get; }
 
-        /// <summary>Agrega una tarea ya existente (carga inicial, o movida desde otra lista) al bucket correcto.</summary>
+        /// <summary>
+        /// Agrega una tarea de primer nivel ya existente (carga inicial, o movida desde
+        /// otra lista) al bucket correcto. <see cref="TodoItem.SubTasks"/> ya viene poblado
+        /// solo por EF Core (fixup automático de navegación entre entidades trackeadas del
+        /// mismo contexto — ver <see cref="MainViewModel.InitializeAsync"/>); acá solo hace
+        /// falta suscribir esas subtareas para que sus cambios de estado también persistan.
+        /// </summary>
         public void AddExistingItem(TodoItem item)
         {
             if (item.Estado == TodoEstado.Completado) CompletedItems.Add(item);
             else Items.Add(item);
             SubscribeItem(item);
+            foreach (var sub in item.SubTasks)
+                SubscribeItem(sub);
             RaiseCompletedCountChanged();
         }
 
@@ -135,6 +148,50 @@ namespace ToDoApp.ViewModels
                 // ignore for now, igual que en Sprint 1
             }
             DetachItem(item);
+        }
+
+        /// <summary>
+        /// Crea una subtarea bajo <paramref name="parent"/>, tomando el título de
+        /// <see cref="TodoItem.NewSubTaskTitle"/> de esa misma tarea (Sprint 3, un solo nivel).
+        /// No hace falta agregarla a mano a <c>parent.SubTasks</c>: al guardar, EF Core
+        /// hace fixup automático de la navegación entre entidades trackeadas del mismo
+        /// contexto, así que la colección (la misma que bindea la UI) se actualiza sola.
+        /// </summary>
+        public async void AddSubTask(TodoItem? parent)
+        {
+            if (parent is null) return;
+            if (string.IsNullOrWhiteSpace(parent.NewSubTaskTitle)) return;
+
+            var subTask = new TodoItem { Title = parent.NewSubTaskTitle.Trim() };
+            try
+            {
+                await _todoService.AddSubTaskAsync(subTask, parent.Id);
+            }
+            catch (System.InvalidOperationException)
+            {
+                // parent ya es una subtarea, o dejó de existir; no hay nada que agregar
+                return;
+            }
+
+            SubscribeItem(subTask);
+            parent.NewSubTaskTitle = string.Empty;
+        }
+
+        public async void DeleteSubTask(TodoItem? subTask)
+        {
+            if (subTask is null) return;
+            try
+            {
+                await _todoService.DeleteAsync(subTask.Id);
+            }
+            catch
+            {
+                // ignore for now, igual que en DeleteTask
+            }
+
+            subTask.PropertyChanged -= Item_PropertyChanged;
+            var parent = Items.Concat(CompletedItems).FirstOrDefault(t => t.SubTasks.Contains(subTask));
+            parent?.SubTasks.Remove(subTask);
         }
 
         private void SubscribeItem(TodoItem item) => item.PropertyChanged += Item_PropertyChanged;

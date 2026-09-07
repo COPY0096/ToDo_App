@@ -1,4 +1,5 @@
 using System;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 
 namespace ToDoApp.Models
@@ -104,6 +105,38 @@ namespace ToDoApp.Models
         public int TodoListId { get; set; }
 
         public TodoList? TodoList { get; set; }
+
+        /// <summary>FK a la tarea padre. Null si es una tarea de primer nivel (Sprint 3).</summary>
+        public int? ParentTaskId { get; set; }
+
+        public TodoItem? ParentTask { get; set; }
+
+        /// <summary>
+        /// Subtareas de esta tarea (Sprint 3, un solo nivel: una subtarea no
+        /// puede tener subtareas propias). ObservableCollection para poder
+        /// bindear directo desde XAML sin un ViewModel por tarjeta.
+        /// </summary>
+        public ObservableCollection<TodoItem> SubTasks { get; set; } = new ObservableCollection<TodoItem>();
+
+        private string _newSubTaskTitle = string.Empty;
+
+        /// <summary>
+        /// Estado transitorio de UI: título en curso de tipeo para una nueva subtarea
+        /// de esta tarea. No se persiste (ver <c>AppDbContext.OnModelCreating</c>,
+        /// donde se excluye del mapeo con <c>Ignore</c>).
+        /// </summary>
+        public string NewSubTaskTitle
+        {
+            get => _newSubTaskTitle;
+            set
+            {
+                if (_newSubTaskTitle != value)
+                {
+                    _newSubTaskTitle = value;
+                    OnPropertyChanged(nameof(NewSubTaskTitle));
+                }
+            }
+        }
 
         public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged(string name) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
