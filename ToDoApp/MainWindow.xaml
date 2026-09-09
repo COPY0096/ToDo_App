@@ -167,7 +167,19 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="Main Board" FontSize="18" FontWeight="Bold" Margin="0,0,0,10" />
+        <Grid Grid.Row="0" Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0" Text="Main Board" FontSize="18" FontWeight="Bold" VerticalAlignment="Center" />
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <Button Content="Exportar backup" Padding="8,4" Click="ExportBackup_Click"
+                        ToolTip="Guardar todas las listas y tareas en un archivo" />
+                <Button Content="Restaurar backup" Padding="8,4" Margin="8,0,0,0" Click="RestoreBackup_Click"
+                        ToolTip="Reemplazar TODOS los datos actuales por los de un archivo de backup" />
+            </StackPanel>
+        </Grid>
 
         <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
             <StackPanel Orientation="Horizontal">

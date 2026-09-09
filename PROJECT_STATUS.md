@@ -12,7 +12,7 @@ El proyecto corresponde a una aplicación de escritorio desarrollada con **WPF**
 
 **Rama activa:** `main`
 
-**Último commit:** Sprint 3 (subtareas) y feature "mover tareas entre listas" — ✅ ambos COMPLETADOS y verificados manualmente.
+**Último commit:** Sprint 4 (backup/export/import) — 🟡 implementado, falta verificación manual para cerrar el MVP.
 
 ---
 
@@ -289,6 +289,29 @@ en el alcance de ningún sprint (Sprint 2 no lo incluyó — ver su "Fuera de al
 
 ---
 
+### Sprint 4 — Confiabilidad de datos (Backup / Export / Import)
+
+**Estado:** 🟡 **Implementado, pendiente verificación manual en la app real** (modelo,
+servicio, UI y tests unitarios hechos siguiendo el plan de [SPRINT4.md](../SPRINT4.md);
+falta que confirmes el flujo a mano en la app).
+
+| Ítem | Estado | Detalles |
+|---|---|---|
+| `BackupData`/`TodoListBackup`/`TodoItemBackup` | ✅ | Árbol auto-contenido sin Ids de EF, evita referencias circulares al serializar |
+| `BackupService.ExportAsync` | ✅ | Lee explícitamente (no depende del fixup automático de EF); anida subtareas bajo su padre |
+| `BackupService.ImportAsync` | ✅ | Reemplazo total en transacción (SQLite real; en tests con InMemory se omite porque ese proveedor no la soporta); si ningún list viene marcado predeterminado, se elige el primero; rechaza backups sin listas; ignora niveles de subtarea más allá del primero |
+| UI en `MainWindow.xaml` | ✅ | Botones "Exportar backup" / "Restaurar backup" junto al título; confirmación antes de restaurar, errores descriptivos si el archivo es inválido |
+| Backup automático (`todo.db.bak`) | ✅ | Copia rotativa de `todo.db` antes de cada `Database.Migrate()`, red de contención ante una migración rota |
+| Tests | ✅ | 60/60 en verde (8 nuevos: `BackupServiceTests` — export, import, reemplazo, jerarquía, límite de nivel, round-trip) |
+| Verificación manual en la app | ⬜ | Pendiente — exportar, agregar algo más, restaurar y confirmar que vuelve al estado exportado; probar restaurar un archivo inválido |
+
+**Decisiones tomadas para este sprint** (ver [SPRINT4.md](../SPRINT4.md)): importar es
+reemplazo total (no merge) — por eso el botón dice "Restaurar" y no "Importar"; el `.bak`
+automático es solo contención ante una migración rota, no el backup real que controla el
+usuario; formato JSON legible sin encriptar.
+
+---
+
 ## ✅ Testing
 
 **Estado:** Suite inicial de unit tests agregada (proyecto `ToDoApp.Tests`, xUnit).
@@ -302,6 +325,7 @@ en el alcance de ningún sprint (Sprint 2 no lo incluyó — ver su "Fuera de al
 | **Servicio** (`TodoListService`) | ✅ | CRUD de listas, borrado predeterminado bloqueado, mover/eliminar tareas |
 | **Servicio** (`TodoService`, subtareas) | ✅ | `AddSubTaskAsync`/`GetSubTasksAsync`, límite de 1 nivel, herencia de lista, cascada al borrar el padre |
 | **ViewModel** (subtareas) | ✅ | Árbol armado al cargar, alta/borrado de subtarea, persistencia con la lista correcta |
+| **Servicio** (`BackupService`) | ✅ | Export con jerarquía anidada, import como reemplazo total, fallback de lista predeterminada, límite de 1 nivel, round-trip |
 | Integration tests (UI/E2E) | ⬜ | No implementado |
 
 ```powershell
@@ -309,7 +333,7 @@ en el alcance de ningún sprint (Sprint 2 no lo incluyó — ver su "Fuera de al
 dotnet test ToDoApp/ToDoApp.slnx
 ```
 
-52 tests, todos en verde al momento de este commit (27 de Sprint 1 + 10 de Sprint 2 + 8 de Sprint 3 + 7 nuevos de mover tareas entre listas).
+60 tests, todos en verde al momento de este commit (27 de Sprint 1 + 10 de Sprint 2 + 8 de Sprint 3 + 7 de mover tareas entre listas + 8 nuevos de Sprint 4/backup).
 
 ---
 
@@ -383,7 +407,8 @@ dotnet test ToDoApp/ToDoApp.slnx
 | **Sprint 1** | 100% | ✅ Completado | CRUD, edición en línea, estados visuales, validaciones |
 | **Sprint 2** | 100% | ✅ Completado | Listas/board implementado y verificado manualmente |
 | **Sprint 3** | 100% | ✅ Completado | Subtareas jerárquicas (un nivel), verificado manualmente |
-| **Total Proyecto** | ~90% | 🟡 En progreso | Sprints 0-3 completados; no hay un Sprint 4 definido todavía |
+| **Sprint 4** | ~90% | 🟡 Implementado, falta verificación manual | Backup/export/import — cierra el MVP |
+| **Total Proyecto (MVP)** | ~95% | 🟡 En progreso | Falta solo verificar Sprint 4 a mano para cerrar el MVP |
 
 ---
 
@@ -512,5 +537,5 @@ test: Agregación de tests
 
 ---
 
-**Estado:** El proyecto está en fase de desarrollo activo. Sprints 0, 1, 2 (listas/board) y 3 (subtareas/jerarquía) están completados y verificados manualmente por el usuario, junto con la feature de mover tareas entre listas. No hay un Sprint 4 definido todavía — el backlog pendiente (visible en las secciones "Fuera de alcance" de SPRINT2.md/SPRINT3.md y en "Funcionalidades Pendientes" más abajo) todavía no se agrupó en un plan de sprint concreto.
+**Estado:** El proyecto está en fase de desarrollo activo. Sprints 0, 1, 2 (listas/board) y 3 (subtareas/jerarquía) están completados y verificados manualmente por el usuario, junto con la feature de mover tareas entre listas. Sprint 4 (backup/export/import) está implementado y con 60/60 tests en verde; falta la verificación manual del usuario en la app real. Con Sprint 4 verificado, el **MVP queda cerrado** — ver [SPRINT4.md](SPRINT4.md) para el detalle y la lista de qué queda deliberadamente para después (sync en la nube, versionado de backups, prioridades, búsqueda, etc.).
 

@@ -1,22 +1,30 @@
+using System;
+using System.IO;
+using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
+using Microsoft.Win32;
 using ToDoApp.Models;
+using ToDoApp.Services;
 using ToDoApp.ViewModels;
 
 namespace ToDoApp.Views
 {
     public partial class MainWindow : Window
     {
+        private BackupService? _backupService;
+
         public MainWindow()
         {
             InitializeComponent();
         }
 
         // DI constructor
-        public MainWindow(MainViewModel vm)
+        public MainWindow(MainViewModel vm, BackupService backupService)
         {
             InitializeComponent();
             DataContext = vm;
+            _backupService = backupService;
         }
 
         private async void Grid_Loaded(object sender, RoutedEventArgs e)
@@ -73,6 +81,71 @@ namespace ToDoApp.Views
             if (DataContext is not MainViewModel vm) return;
 
             await vm.MoveTaskAsync(task, targetColumn);
+        }
+
+        private async void ExportBackup_Click(object sender, RoutedEventArgs e)
+        {
+            if (_backupService is null) return;
+
+            var dialog = new SaveFileDialog
+            {
+                FileName = $"todo-backup-{DateTime.Now:yyyyMMdd}.json",
+                Filter = "Backup JSON (*.json)|*.json"
+            };
+            if (dialog.ShowDialog() != true) return;
+
+            try
+            {
+                var backup = await _backupService.ExportAsync();
+                var json = JsonSerializer.Serialize(backup, new JsonSerializerOptions { WriteIndented = true });
+                await File.WriteAllTextAsync(dialog.FileName, json);
+
+                MessageBox.Show($"Backup guardado en:\n{dialog.FileName}", "Exportar backup",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"No se pudo exportar el backup:\n{ex.Message}", "Exportar backup",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        // "Restaurar" (no "Importar"): reemplaza TODOS los datos actuales por los del
+        // archivo, no los combina — ver decisión 1 de SPRINT4.md. Por eso la confirmación
+        // va ANTES de elegir el archivo: el usuario tiene que aceptar el reemplazo total
+        // a ciegas, no después de ya haber elegido qué backup usar.
+        private async void RestoreBackup_Click(object sender, RoutedEventArgs e)
+        {
+            if (_backupService is null) return;
+            if (DataContext is not MainViewModel vm) return;
+
+            var confirmar = MessageBox.Show(
+                "Esto va a reemplazar TODOS los datos actuales por los del archivo. ¿Continuar?",
+                "Restaurar backup",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+            if (confirmar != MessageBoxResult.Yes) return;
+
+            var dialog = new OpenFileDialog { Filter = "Backup JSON (*.json)|*.json|Todos los archivos (*.*)|*.*" };
+            if (dialog.ShowDialog() != true) return;
+
+            try
+            {
+                var json = await File.ReadAllTextAsync(dialog.FileName);
+                var backup = JsonSerializer.Deserialize<BackupData>(json)
+                    ?? throw new InvalidOperationException("El archivo no tiene el formato esperado.");
+
+                await _backupService.ImportAsync(backup);
+                await vm.ReloadAsync();
+
+                MessageBox.Show("Backup restaurado correctamente.", "Restaurar backup",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"No se pudo restaurar el backup:\n{ex.Message}", "Restaurar backup",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
     }
 }

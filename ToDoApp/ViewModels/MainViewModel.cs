@@ -29,7 +29,21 @@ namespace ToDoApp.ViewModels
 
         public ObservableCollection<TodoListColumnViewModel> Lists { get; } = new ObservableCollection<TodoListColumnViewModel>();
 
-        public async Task InitializeAsync()
+        public async Task InitializeAsync() => await LoadAsync();
+
+        /// <summary>
+        /// Vacía y vuelve a armar las columnas desde la base (Sprint 4: se usa después
+        /// de "Restaurar backup", que reemplaza todos los datos por fuera de este
+        /// ViewModel — las columnas viejas quedarían apuntando a listas/tareas que ya
+        /// no existen si no se reconstruyen desde cero).
+        /// </summary>
+        public async Task ReloadAsync()
+        {
+            Lists.Clear();
+            await LoadAsync();
+        }
+
+        private async Task LoadAsync()
         {
             var lists = (await _todoListService.GetAllAsync()).ToList();
             var items = (await _todoService.GetAllAsync()).ToList();

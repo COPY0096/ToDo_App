@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -27,10 +28,22 @@ namespace ToDoApp
                     services.AddDbContext<AppDbContext>(opts => opts.UseSqlite("Data Source=todo.db"));
                     services.AddScoped<TodoService>();
                     services.AddScoped<TodoListService>();
+                    services.AddScoped<BackupService>();
                     services.AddSingleton<MainViewModel>();
                     services.AddSingleton<MainWindow>();
                 })
                 .Build();
+
+            // Sprint 4: red de contención ante una migración que rompa algo — una sola
+            // copia rotativa (se sobrescribe en cada arranque), no un backup versionado.
+            // El mecanismo real de backup/portabilidad que el usuario controla es el
+            // export/import manual a JSON (BackupService, botones en MainWindow).
+            const string dbPath = "todo.db";
+            const string dbBackupPath = "todo.db.bak";
+            if (File.Exists(dbPath))
+            {
+                File.Copy(dbPath, dbBackupPath, overwrite: true);
+            }
 
             // Apply any pending EF Core migrations (creates the DB on first run,
             // and brings the schema up to date on later runs instead of leaving
