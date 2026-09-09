@@ -1,6 +1,6 @@
 # ToDo App — Estado Actual del Proyecto
 
-**Última actualización:** 7 de septiembre de 2026
+**Última actualización:** 8 de septiembre de 2026
 
 ---
 
@@ -12,7 +12,7 @@ El proyecto corresponde a una aplicación de escritorio desarrollada con **WPF**
 
 **Rama activa:** `main`
 
-**Último commit:** Sprint 2 (listas/board) — ✅ COMPLETADO y verificado manualmente.
+**Último commit:** Sprint 3 (subtareas) y feature "mover tareas entre listas" — ✅ ambos COMPLETADOS y verificados manualmente.
 
 ---
 
@@ -244,10 +244,8 @@ Elementos:
 
 ### Sprint 3 — Jerarquía (Subtareas)
 
-**Estado:** 🟡 **Implementado, pendiente verificación manual en la app real** (modelo,
-migración, servicios, ViewModel, UI y tests unitarios hechos siguiendo el plan de
-[SPRINT3.md](../SPRINT3.md); falta que confirmes el flujo a mano en la app, como se hizo
-en Sprint 2).
+**Estado:** ✅ **COMPLETADO (100%)** — modelo, migración, servicios, ViewModel, UI, tests
+y verificación manual en la app real, todo hecho siguiendo el plan de [SPRINT3.md](../SPRINT3.md).
 
 | Ítem | Estado | Detalles |
 |---|---|---|
@@ -257,7 +255,7 @@ en Sprint 2).
 | `TodoListColumnViewModel` | ✅ | `AddSubTaskCommand`/`DeleteSubTaskCommand`; las subtareas nunca cuentan como tarjeta propia de la columna |
 | UI en `MainWindow.xaml` | ✅ | Subtareas indentadas dentro de la tarjeta del padre (plantilla simplificada: checkbox + título) + "+ Add a subtask" |
 | Tests | ✅ | 45/45 en verde (8 nuevos: `TodoServiceTests` + `MainViewModelTests` para subtareas) |
-| Verificación manual en la app | ⬜ | Pendiente — falta que confirmes vos el flujo real (agregar subtarea, completarla, borrar el padre en cascada) |
+| Verificación manual en la app | ✅ | Confirmado por el usuario: el flujo completo (agregar subtarea, completarla, borrado en cascada) funciona bien |
 
 **Decisiones tomadas para este sprint** (ver [SPRINT3.md](../SPRINT3.md)): subtarea
 comparte lista con su padre, límite de un solo nivel, plantilla simplificada (sin
@@ -272,7 +270,7 @@ colección a mano y terminaba duplicando entradas por esto mismo (detalle en SPR
 
 ### Mover tareas entre listas
 
-**Estado:** 🟡 **Implementado, pendiente verificación manual en la app real.** No estaba
+**Estado:** ✅ **Implementado y verificado manualmente en la app real.** No estaba
 en el alcance de ningún sprint (Sprint 2 no lo incluyó — ver su "Fuera de alcance"; Sprint
 3 lo excluye explícitamente para subtareas) hasta que se pidió como feature aparte.
 
@@ -287,7 +285,7 @@ en el alcance de ningún sprint (Sprint 2 no lo incluyó — ver su "Fuera de al
   dejándolas escuchando el `PropertyChanged` de la columna vieja. No importaba mientras
   las tareas no se movían entre columnas; con esta feature sí, así que se corrigió.
 - Tests: 7 nuevos (`TodoServiceTests.MoveToListAsync_*` + `MainViewModelTests.MoveTaskAsync_*`).
-- Verificación manual en la app: ⬜ pendiente.
+- Verificación manual en la app: ✅ confirmado por el usuario, funciona bien.
 
 ---
 
@@ -384,8 +382,8 @@ dotnet test ToDoApp/ToDoApp.slnx
 | **Sprint 0** | 100% | ✅ Completado | Arquitectura base lista |
 | **Sprint 1** | 100% | ✅ Completado | CRUD, edición en línea, estados visuales, validaciones |
 | **Sprint 2** | 100% | ✅ Completado | Listas/board implementado y verificado manualmente |
-| **Sprint 3** | ~90% | 🟡 Implementado, falta verificación manual | Subtareas jerárquicas (un nivel) |
-| **Total Proyecto** | ~85% | 🟡 En progreso | Fase 3 de 4 casi completa |
+| **Sprint 3** | 100% | ✅ Completado | Subtareas jerárquicas (un nivel), verificado manualmente |
+| **Total Proyecto** | ~90% | 🟡 En progreso | Sprints 0-3 completados; no hay un Sprint 4 definido todavía |
 
 ---
 
@@ -514,5 +512,5 @@ test: Agregación de tests
 
 ---
 
-**Estado:** El proyecto está en fase de desarrollo activo. Sprint 0, Sprint 1 y Sprint 2 (listas/board) están completados y verificados. Sprint 3 (subtareas/jerarquía) está implementado y con 45/45 tests en verde; falta la verificación manual del usuario en la app real antes de darlo por completado.
+**Estado:** El proyecto está en fase de desarrollo activo. Sprints 0, 1, 2 (listas/board) y 3 (subtareas/jerarquía) están completados y verificados manualmente por el usuario, junto con la feature de mover tareas entre listas. No hay un Sprint 4 definido todavía — el backlog pendiente (visible en las secciones "Fuera de alcance" de SPRINT2.md/SPRINT3.md y en "Funcionalidades Pendientes" más abajo) todavía no se agrupó en un plan de sprint concreto.
 
