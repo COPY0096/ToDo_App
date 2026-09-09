@@ -12,7 +12,7 @@ El proyecto corresponde a una aplicación de escritorio desarrollada con **WPF**
 
 **Rama activa:** `main`
 
-**Último commit:** Sprint 5 (búsqueda y prioridad, post-MVP) — 🟡 implementado, falta verificación manual.
+**Último commit:** Sprint 5 (búsqueda y prioridad, post-MVP) — ✅ COMPLETADO y verificado manualmente.
 
 ---
 
@@ -313,9 +313,9 @@ usuario; formato JSON legible sin encriptar.
 
 ### Sprint 5 — Búsqueda y Prioridad (post-MVP)
 
-**Estado:** 🟡 **Implementado, pendiente verificación manual en la app real** (modelo,
-migración, ordenamiento, converter, UI y tests unitarios hechos siguiendo el plan de
-[SPRINT5.md](../SPRINT5.md); falta que confirmes el flujo a mano en la app).
+**Estado:** ✅ **COMPLETADO (100%)** — modelo, migración, ordenamiento, converter, UI,
+tests y verificación manual en la app real, todo hecho siguiendo el plan de
+[SPRINT5.md](../SPRINT5.md).
 
 | Ítem | Estado | Detalles |
 |---|---|---|
@@ -325,7 +325,7 @@ migración, ordenamiento, converter, UI y tests unitarios hechos siguiendo el pl
 | Badge de prioridad en la tarjeta | ✅ | Mismo patrón visual que el de `Estado` (gris/celeste/naranja) |
 | Búsqueda global | ✅ | `MainViewModel.SearchText` + `TaskSearchVisibilityConverter` (primer converter del proyecto) filtran tarjetas por título/descripción en tiempo real |
 | Tests | ✅ | 71/71 en verde (11 nuevos: `TaskSearchMatcherTests` + orden por prioridad en `MainViewModelTests`) |
-| Verificación manual en la app | ⬜ | Pendiente — cambiar prioridades y confirmar el reordenamiento, buscar por título/descripción, confirmar que la búsqueda no encuentra por contenido de subtareas |
+| Verificación manual en la app | ✅ | Confirmado por el usuario, funciona bien — incluyó detectar y corregir un bug de layout (el botón "Eliminar" quedaba cortado por el badge nuevo de Prioridad) |
 
 **Decisiones tomadas para este sprint** (ver [SPRINT5.md](../SPRINT5.md)): el orden por
 prioridad es automático y fijo (no hay selector de criterio ni reordenamiento manual); las
@@ -434,7 +434,7 @@ dotnet test ToDoApp/ToDoApp.slnx
 | **Sprint 3** | 100% | ✅ Completado | Subtareas jerárquicas (un nivel), verificado manualmente |
 | **Sprint 4** | 100% | ✅ Completado | Backup/export/import, verificado manualmente |
 | **Total Proyecto (MVP)** | 100% | ✅ **MVP completo** | Sprints 0-4 completados y verificados |
-| **Sprint 5** (post-MVP) | ~90% | 🟡 Implementado, falta verificación manual | Búsqueda y prioridad |
+| **Sprint 5** (post-MVP) | 100% | ✅ Completado | Búsqueda y prioridad, verificado manualmente |
 
 ---
 
@@ -563,10 +563,9 @@ test: Agregación de tests
 
 ---
 
-**Estado:** 🎉 **MVP completo** (Sprints 0-4, todos verificados manualmente). Encima del MVP,
-Sprint 5 (búsqueda y prioridad) ya está implementado con 71/71 tests en verde; falta la
-verificación manual del usuario en la app real para darlo por cerrado. Lo que queda después
-es backlog post-MVP deliberadamente diferido — sync en la nube, versionado de backups,
-selector de criterio de orden, integración con Google Tasks, etc. (ver las secciones "Fuera
-de alcance" de cada SPRINTx.md y "Funcionalidades Pendientes" más abajo).
+**Estado:** 🎉 **MVP completo** (Sprints 0-4) **+ Sprint 5** (búsqueda y prioridad),
+todos completados y verificados manualmente por el usuario. 71/71 tests en verde. Lo que
+queda es backlog post-MVP deliberadamente diferido — sync en la nube, versionado de
+backups, selector de criterio de orden, integración con Google Tasks, etc. (ver las
+secciones "Fuera de alcance" de cada SPRINTx.md y "Funcionalidades Pendientes" más abajo).
 
