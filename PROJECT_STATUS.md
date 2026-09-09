@@ -12,7 +12,7 @@ El proyecto corresponde a una aplicación de escritorio desarrollada con **WPF**
 
 **Rama activa:** `main`
 
-**Último commit:** Sprint 4 (backup/export/import) — 🟡 implementado, falta verificación manual para cerrar el MVP.
+**Último commit:** Sprint 4 (backup/export/import) — ✅ COMPLETADO y verificado manualmente. **MVP cerrado.**
 
 ---
 
@@ -291,9 +291,8 @@ en el alcance de ningún sprint (Sprint 2 no lo incluyó — ver su "Fuera de al
 
 ### Sprint 4 — Confiabilidad de datos (Backup / Export / Import)
 
-**Estado:** 🟡 **Implementado, pendiente verificación manual en la app real** (modelo,
-servicio, UI y tests unitarios hechos siguiendo el plan de [SPRINT4.md](../SPRINT4.md);
-falta que confirmes el flujo a mano en la app).
+**Estado:** ✅ **COMPLETADO (100%)** — modelo, servicio, UI, tests y verificación manual
+en la app real, todo hecho siguiendo el plan de [SPRINT4.md](../SPRINT4.md).
 
 | Ítem | Estado | Detalles |
 |---|---|---|
@@ -303,7 +302,7 @@ falta que confirmes el flujo a mano en la app).
 | UI en `MainWindow.xaml` | ✅ | Botones "Exportar backup" / "Restaurar backup" junto al título; confirmación antes de restaurar, errores descriptivos si el archivo es inválido |
 | Backup automático (`todo.db.bak`) | ✅ | Copia rotativa de `todo.db` antes de cada `Database.Migrate()`, red de contención ante una migración rota |
 | Tests | ✅ | 60/60 en verde (8 nuevos: `BackupServiceTests` — export, import, reemplazo, jerarquía, límite de nivel, round-trip) |
-| Verificación manual en la app | ⬜ | Pendiente — exportar, agregar algo más, restaurar y confirmar que vuelve al estado exportado; probar restaurar un archivo inválido |
+| Verificación manual en la app | ✅ | Confirmado por el usuario: corrió la app y el flujo de backup/restore funciona bien |
 
 **Decisiones tomadas para este sprint** (ver [SPRINT4.md](../SPRINT4.md)): importar es
 reemplazo total (no merge) — por eso el botón dice "Restaurar" y no "Importar"; el `.bak`
@@ -407,8 +406,8 @@ dotnet test ToDoApp/ToDoApp.slnx
 | **Sprint 1** | 100% | ✅ Completado | CRUD, edición en línea, estados visuales, validaciones |
 | **Sprint 2** | 100% | ✅ Completado | Listas/board implementado y verificado manualmente |
 | **Sprint 3** | 100% | ✅ Completado | Subtareas jerárquicas (un nivel), verificado manualmente |
-| **Sprint 4** | ~90% | 🟡 Implementado, falta verificación manual | Backup/export/import — cierra el MVP |
-| **Total Proyecto (MVP)** | ~95% | 🟡 En progreso | Falta solo verificar Sprint 4 a mano para cerrar el MVP |
+| **Sprint 4** | 100% | ✅ Completado | Backup/export/import, verificado manualmente |
+| **Total Proyecto (MVP)** | 100% | ✅ **MVP completo** | Sprints 0-4 completados y verificados |
 
 ---
 
@@ -537,5 +536,5 @@ test: Agregación de tests
 
 ---
 
-**Estado:** El proyecto está en fase de desarrollo activo. Sprints 0, 1, 2 (listas/board) y 3 (subtareas/jerarquía) están completados y verificados manualmente por el usuario, junto con la feature de mover tareas entre listas. Sprint 4 (backup/export/import) está implementado y con 60/60 tests en verde; falta la verificación manual del usuario en la app real. Con Sprint 4 verificado, el **MVP queda cerrado** — ver [SPRINT4.md](SPRINT4.md) para el detalle y la lista de qué queda deliberadamente para después (sync en la nube, versionado de backups, prioridades, búsqueda, etc.).
+**Estado:** 🎉 **MVP completo.** Sprints 0, 1, 2 (listas/board), 3 (subtareas/jerarquía) y 4 (backup/export/import) están todos completados y verificados manualmente por el usuario, junto con la feature de mover tareas entre listas. 60/60 tests en verde. Lo que queda es backlog post-MVP deliberadamente diferido — sync en la nube, versionado de backups, prioridades, búsqueda/ordenamiento, integración con Google Tasks, etc. (ver las secciones "Fuera de alcance" de cada SPRINTx.md y "Funcionalidades Pendientes" más abajo) — nada de eso bloquea considerar la app usable hoy.
 
