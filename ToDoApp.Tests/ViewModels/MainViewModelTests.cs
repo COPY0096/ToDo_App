@@ -311,6 +311,78 @@ namespace ToDoApp.Tests.ViewModels
         }
 
         [Fact]
+        public async Task ColumnAddTask_DefaultsToPrioridadMedia()
+        {
+            var vm = CreateViewModel(out _, out _);
+            await vm.InitializeAsync();
+            var column = vm.Lists.Single();
+
+            column.NewTaskTitle = "Nueva";
+            column.AddTaskCommand.Execute(null);
+            await Task.Delay(50);
+
+            Assert.Equal(TodoPrioridad.Media, column.Items[0].Prioridad);
+        }
+
+        [Fact]
+        public async Task Items_AreOrderedByPrioridadDescending_ThenByFechaCreacion()
+        {
+            var vm = CreateViewModel(out var todoService, out _);
+            await vm.InitializeAsync();
+            var column = vm.Lists.Single();
+
+            // Se agregan en orden "al revés" a propósito para confirmar que el
+            // orden final depende de Prioridad, no del orden de alta.
+            await todoService.AddAsync(new TodoItem { Title = "Baja", TodoListId = column.Id, Prioridad = TodoPrioridad.Baja, FechaCreacion = DateTime.Now });
+            await todoService.AddAsync(new TodoItem { Title = "Alta", TodoListId = column.Id, Prioridad = TodoPrioridad.Alta, FechaCreacion = DateTime.Now.AddMinutes(1) });
+            await todoService.AddAsync(new TodoItem { Title = "Media", TodoListId = column.Id, Prioridad = TodoPrioridad.Media, FechaCreacion = DateTime.Now.AddMinutes(2) });
+
+            await vm.ReloadAsync();
+            var reloadedColumn = vm.Lists.Single();
+
+            Assert.Equal(new[] { "Alta", "Media", "Baja" }, reloadedColumn.Items.Select(i => i.Title));
+        }
+
+        [Fact]
+        public async Task ChangingPrioridad_ReordersItem_WithinItsBucket()
+        {
+            var vm = CreateViewModel(out _, out _);
+            await vm.InitializeAsync();
+            var column = vm.Lists.Single();
+            column.NewTaskTitle = "Primera";
+            column.AddTaskCommand.Execute(null);
+            await Task.Delay(50);
+            column.NewTaskTitle = "Segunda";
+            column.AddTaskCommand.Execute(null);
+            await Task.Delay(50);
+            var segunda = column.Items.Single(i => i.Title == "Segunda");
+
+            segunda.Prioridad = TodoPrioridad.Alta;
+            await Task.Delay(50);
+
+            Assert.Equal("Segunda", column.Items[0].Title);
+        }
+
+        [Fact]
+        public async Task CompletedItems_AreAlsoOrderedByPrioridad()
+        {
+            var vm = CreateViewModel(out var todoService, out _);
+            await vm.InitializeAsync();
+            var column = vm.Lists.Single();
+            var baja = await todoService.AddAsync(new TodoItem { Title = "Baja", TodoListId = column.Id, Prioridad = TodoPrioridad.Baja });
+            var alta = await todoService.AddAsync(new TodoItem { Title = "Alta", TodoListId = column.Id, Prioridad = TodoPrioridad.Alta });
+            column.AddExistingItem(baja);
+            column.AddExistingItem(alta);
+
+            baja.Estado = TodoEstado.Completado;
+            await Task.Delay(50);
+            alta.Estado = TodoEstado.Completado;
+            await Task.Delay(50);
+
+            Assert.Equal(new[] { "Alta", "Baja" }, column.CompletedItems.Select(i => i.Title));
+        }
+
+        [Fact]
         public async Task DeleteListAsync_DeletingTasks_RemovesThemPermanently()
         {
             var vm = CreateViewModel(out var todoService, out _);

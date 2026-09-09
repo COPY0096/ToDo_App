@@ -12,7 +12,7 @@ El proyecto corresponde a una aplicación de escritorio desarrollada con **WPF**
 
 **Rama activa:** `main`
 
-**Último commit:** Sprint 4 (backup/export/import) — ✅ COMPLETADO y verificado manualmente. **MVP cerrado.**
+**Último commit:** Sprint 5 (búsqueda y prioridad, post-MVP) — 🟡 implementado, falta verificación manual.
 
 ---
 
@@ -311,6 +311,30 @@ usuario; formato JSON legible sin encriptar.
 
 ---
 
+### Sprint 5 — Búsqueda y Prioridad (post-MVP)
+
+**Estado:** 🟡 **Implementado, pendiente verificación manual en la app real** (modelo,
+migración, ordenamiento, converter, UI y tests unitarios hechos siguiendo el plan de
+[SPRINT5.md](../SPRINT5.md); falta que confirmes el flujo a mano en la app).
+
+| Ítem | Estado | Detalles |
+|---|---|---|
+| Enum `TodoPrioridad` (Baja/Media/Alta) | ✅ | Default `Media`, independiente de `Estado` |
+| Migración `AddPrioridad` | ✅ | `defaultValue: 1` (Media) ajustado a mano — EF scaffoldea 0 por default, no el valor del inicializador de C# |
+| Orden automático por prioridad | ✅ | `TodoListColumnViewModel.SortItems` reordena `Items`/`CompletedItems` in-place (Alta→Media→Baja, luego por fecha de creación) al agregar, mover de bucket, o cambiar `Prioridad` |
+| Badge de prioridad en la tarjeta | ✅ | Mismo patrón visual que el de `Estado` (gris/celeste/naranja) |
+| Búsqueda global | ✅ | `MainViewModel.SearchText` + `TaskSearchVisibilityConverter` (primer converter del proyecto) filtran tarjetas por título/descripción en tiempo real |
+| Tests | ✅ | 71/71 en verde (11 nuevos: `TaskSearchMatcherTests` + orden por prioridad en `MainViewModelTests`) |
+| Verificación manual en la app | ⬜ | Pendiente — cambiar prioridades y confirmar el reordenamiento, buscar por título/descripción, confirmar que la búsqueda no encuentra por contenido de subtareas |
+
+**Decisiones tomadas para este sprint** (ver [SPRINT5.md](../SPRINT5.md)): el orden por
+prioridad es automático y fijo (no hay selector de criterio ni reordenamiento manual); las
+subtareas no tienen prioridad propia ni participan del orden; la búsqueda solo mira
+título/descripción de tareas de primer nivel, nunca subtareas; las columnas nunca se
+ocultan por la búsqueda, solo sus tarjetas.
+
+---
+
 ## ✅ Testing
 
 **Estado:** Suite inicial de unit tests agregada (proyecto `ToDoApp.Tests`, xUnit).
@@ -325,6 +349,8 @@ usuario; formato JSON legible sin encriptar.
 | **Servicio** (`TodoService`, subtareas) | ✅ | `AddSubTaskAsync`/`GetSubTasksAsync`, límite de 1 nivel, herencia de lista, cascada al borrar el padre |
 | **ViewModel** (subtareas) | ✅ | Árbol armado al cargar, alta/borrado de subtarea, persistencia con la lista correcta |
 | **Servicio** (`BackupService`) | ✅ | Export con jerarquía anidada, import como reemplazo total, fallback de lista predeterminada, límite de 1 nivel, round-trip |
+| **Búsqueda** (`TaskSearchMatcher`) | ✅ | Match case-insensitive por título/descripción, vacío = sin filtro |
+| **ViewModel** (orden por prioridad) | ✅ | `Items`/`CompletedItems` ordenados Alta→Media→Baja al agregar, mover de bucket, o cambiar `Prioridad` |
 | Integration tests (UI/E2E) | ⬜ | No implementado |
 
 ```powershell
@@ -332,7 +358,7 @@ usuario; formato JSON legible sin encriptar.
 dotnet test ToDoApp/ToDoApp.slnx
 ```
 
-60 tests, todos en verde al momento de este commit (27 de Sprint 1 + 10 de Sprint 2 + 8 de Sprint 3 + 7 de mover tareas entre listas + 8 nuevos de Sprint 4/backup).
+71 tests, todos en verde al momento de este commit (27 de Sprint 1 + 10 de Sprint 2 + 8 de Sprint 3 + 7 de mover tareas entre listas + 8 de Sprint 4/backup + 11 nuevos de Sprint 5/búsqueda-prioridad).
 
 ---
 
@@ -363,10 +389,10 @@ dotnet test ToDoApp/ToDoApp.slnx
 
 ### Prioridad Media
 
-- [ ] **Categorías/Listas** - Organizar tareas por listas
-- [ ] **Prioridades** - Asignar nivel de urgencia
-- [ ] **Búsqueda** - Filtrar tareas por texto
-- [ ] **Ordenamiento** - Por fecha, prioridad, etc.
+- [x] **Categorías/Listas** - Organizar tareas por listas (Sprint 2)
+- [x] **Prioridades** - Asignar nivel de urgencia (Sprint 5, pendiente verificación manual)
+- [x] **Búsqueda** - Filtrar tareas por texto (Sprint 5, pendiente verificación manual)
+- [x] **Ordenamiento** - Automático por prioridad dentro de cada columna (Sprint 5); no hay selector de criterio (fecha, manual, etc.) — ver "Fuera de alcance" en SPRINT5.md
 - [ ] **Paginación** - Si hay muchas tareas
 
 ### Prioridad Baja
@@ -408,6 +434,7 @@ dotnet test ToDoApp/ToDoApp.slnx
 | **Sprint 3** | 100% | ✅ Completado | Subtareas jerárquicas (un nivel), verificado manualmente |
 | **Sprint 4** | 100% | ✅ Completado | Backup/export/import, verificado manualmente |
 | **Total Proyecto (MVP)** | 100% | ✅ **MVP completo** | Sprints 0-4 completados y verificados |
+| **Sprint 5** (post-MVP) | ~90% | 🟡 Implementado, falta verificación manual | Búsqueda y prioridad |
 
 ---
 
@@ -536,5 +563,10 @@ test: Agregación de tests
 
 ---
 
-**Estado:** 🎉 **MVP completo.** Sprints 0, 1, 2 (listas/board), 3 (subtareas/jerarquía) y 4 (backup/export/import) están todos completados y verificados manualmente por el usuario, junto con la feature de mover tareas entre listas. 60/60 tests en verde. Lo que queda es backlog post-MVP deliberadamente diferido — sync en la nube, versionado de backups, prioridades, búsqueda/ordenamiento, integración con Google Tasks, etc. (ver las secciones "Fuera de alcance" de cada SPRINTx.md y "Funcionalidades Pendientes" más abajo) — nada de eso bloquea considerar la app usable hoy.
+**Estado:** 🎉 **MVP completo** (Sprints 0-4, todos verificados manualmente). Encima del MVP,
+Sprint 5 (búsqueda y prioridad) ya está implementado con 71/71 tests en verde; falta la
+verificación manual del usuario en la app real para darlo por cerrado. Lo que queda después
+es backlog post-MVP deliberadamente diferido — sync en la nube, versionado de backups,
+selector de criterio de orden, integración con Google Tasks, etc. (ver las secciones "Fuera
+de alcance" de cada SPRINTx.md y "Funcionalidades Pendientes" más abajo).
 

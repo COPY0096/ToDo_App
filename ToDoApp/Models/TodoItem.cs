@@ -11,6 +11,14 @@ namespace ToDoApp.Models
         Cancelado
     }
 
+    /// <summary>Prioridad de una tarea (Sprint 5). No se sincroniza con ningún otro campo.</summary>
+    public enum TodoPrioridad
+    {
+        Baja,
+        Media,
+        Alta
+    }
+
     public class TodoItem : INotifyPropertyChanged
     {
         public int Id { get; set; }
@@ -19,6 +27,7 @@ namespace ToDoApp.Models
         private string _description = string.Empty;
         private bool _isDone;
         private TodoEstado _estado = TodoEstado.Pendiente;
+        private TodoPrioridad _prioridad = TodoPrioridad.Media; // default neutro, igual criterio que Estado=Pendiente
         private DateTime? _fechaVencimiento;
 
         public string Title
@@ -78,6 +87,20 @@ namespace ToDoApp.Models
                         _isDone = done;
                         OnPropertyChanged(nameof(IsDone));
                     }
+                }
+            }
+        }
+
+        /// <summary>Prioridad de la tarea (Sprint 5). Determina el orden dentro de su columna.</summary>
+        public TodoPrioridad Prioridad
+        {
+            get => _prioridad;
+            set
+            {
+                if (_prioridad != value)
+                {
+                    _prioridad = value;
+                    OnPropertyChanged(nameof(Prioridad));
                 }
             }
         }

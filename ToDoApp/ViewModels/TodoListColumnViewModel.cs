@@ -103,12 +103,14 @@ namespace ToDoApp.ViewModels
         /// </summary>
         public void AddExistingItem(TodoItem item)
         {
-            if (item.Estado == TodoEstado.Completado) CompletedItems.Add(item);
-            else Items.Add(item);
+            ObservableCollection<TodoItem> bucket;
+            if (item.Estado == TodoEstado.Completado) { CompletedItems.Add(item); bucket = CompletedItems; }
+            else { Items.Add(item); bucket = Items; }
             SubscribeItem(item);
             foreach (var sub in item.SubTasks)
                 SubscribeItem(sub);
             RaiseCompletedCountChanged();
+            SortItems(bucket);
         }
 
         /// <summary>
@@ -142,6 +144,7 @@ namespace ToDoApp.ViewModels
             SubscribeItem(item);
             NewTaskTitle = string.Empty;
             (AddTaskCommand as RelayCommand)?.RaiseCanExecuteChanged();
+            SortItems(Items);
         }
 
         public async void DeleteTask(TodoItem? item)
@@ -212,6 +215,13 @@ namespace ToDoApp.ViewModels
             {
                 MoveToCorrectBucket(item);
             }
+            else if (e.PropertyName == nameof(TodoItem.Prioridad))
+            {
+                // Reordenar el bucket que ya tiene a la tarea (no las subtareas: no
+                // participan del orden automático, ver SPRINT5.md Decisión 2).
+                if (Items.Contains(item)) SortItems(Items);
+                else if (CompletedItems.Contains(item)) SortItems(CompletedItems);
+            }
 
             await _todoService.UpdateAsync(item);
         }
@@ -223,11 +233,29 @@ namespace ToDoApp.ViewModels
             {
                 CompletedItems.Add(item);
                 RaiseCompletedCountChanged();
+                SortItems(CompletedItems);
             }
             else if (!isCompleted && CompletedItems.Remove(item))
             {
                 Items.Add(item);
                 RaiseCompletedCountChanged();
+                SortItems(Items);
+            }
+        }
+
+        /// <summary>
+        /// Reordena <paramref name="bucket"/> in-place por prioridad (Alta → Media → Baja)
+        /// y, dentro de la misma prioridad, por fecha de creación (Sprint 5). Usa
+        /// <see cref="ObservableCollection{T}.Move"/> en vez de reconstruir la colección,
+        /// para no generar un reset que "parpadee" toda la lista en la UI.
+        /// </summary>
+        private static void SortItems(ObservableCollection<TodoItem> bucket)
+        {
+            var sorted = bucket.OrderByDescending(i => i.Prioridad).ThenBy(i => i.FechaCreacion).ToList();
+            for (var i = 0; i < sorted.Count; i++)
+            {
+                var currentIndex = bucket.IndexOf(sorted[i]);
+                if (currentIndex != i) bucket.Move(currentIndex, i);
             }
         }
 

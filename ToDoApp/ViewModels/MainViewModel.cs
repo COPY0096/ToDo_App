@@ -83,6 +83,26 @@ namespace ToDoApp.ViewModels
 
         public ICommand AddListCommand { get; }
 
+        private string _searchText = string.Empty;
+
+        /// <summary>
+        /// Búsqueda global (Sprint 5): filtra tarjetas de tareas por título/descripción
+        /// en tiempo real (sin comando ni debounce, ver SPRINT5.md). La UI lo lee vía
+        /// binding para decidir la visibilidad de cada tarjeta con TaskSearchVisibilityConverter.
+        /// </summary>
+        public string SearchText
+        {
+            get => _searchText;
+            set
+            {
+                if (_searchText != value)
+                {
+                    _searchText = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         private bool CanAddList() => !string.IsNullOrWhiteSpace(NewListName);
 
         public async void AddList()
